@@ -1,0 +1,15 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Удаление профиля{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="mb-5">Удаление профиля</h1>
+        <p>Вы уверенны, что хотите удалить профиль?{{ user.name }}</p>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-lg btn-block btn-outline-danger">Удалить</button>
+            <a href="{% url 'catalog:home' %}" class="btn btn-lg btn-block btn-outline-secondary">Вернуться к списку</a>
+        </form>
+    </div>
+{% endblock %}

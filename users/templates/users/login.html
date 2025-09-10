@@ -1,0 +1,14 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-5">Вход</h1>
+    <form method="post" class="form-floating" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-lg btn-block btn-outline-primary">Войти</button>
+        <a href="{% url 'catalog:home' %}" class="btn btn-lg btn-block btn-outline-secondary">Отмена</a>
+    </form>
+</div>
+{% endblock %}

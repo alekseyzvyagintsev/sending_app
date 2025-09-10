@@ -1,0 +1,10 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Выход{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-5">Выход из профиля</h2>
+    <p>Спасибо, что воспользовались нашим сайтом. Вы успешно вышли из профиля.</p>
+    <a class="btn btn-lg btn-block btn-outline-secondary" href="{% url 'users:login' %}">Войти снова</a>
+</div>
+{% endblock %}

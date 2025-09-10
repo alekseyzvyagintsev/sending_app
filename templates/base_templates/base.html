@@ -1,0 +1,26 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Заголовок вкладки{% endblock %}</title>
+    <!-- Подключите статичеcкие файлы со стилями Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+
+</head>
+<body>
+{% include 'base_templates/menu.html' %}
+
+{% block content %}{% endblock %}
+
+{% include 'base_templates/pagination.html' %}
+
+{% include 'base_templates/footer.html' %}
+
+<!-- Подключите статичеcкие файлы со скриптами Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+</body>
+</html>

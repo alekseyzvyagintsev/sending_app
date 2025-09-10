@@ -1,0 +1,24 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}
+    {% if user.id %}
+        <h1 class="mb-5">Редактор профиля</h1>
+    {% else %}
+        <h1 class="mb-5">Регистрация пользователя</h1>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        {% if user.id %}
+            <h1 class="mb-5">Редактор профиля</h1>
+        {% else %}
+            <h1 class="mb-5">Регистрация пользователя</h1>
+        {% endif %}
+        <form method="post" class="form-floating" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-lg btn-block btn-outline-primary">Подтвердить</button>
+            <a href="#" class="btn btn-lg btn-block btn-outline-secondary">Отмена</a>
+        </form>
+    </div>
+{% endblock %}
