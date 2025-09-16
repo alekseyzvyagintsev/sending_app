@@ -1,3 +1,9 @@
 from django.contrib import admin
 
-# Register your models here.
+from sending.models import MessageRecipient, Message, Mailing, MailingAttempt
+
+
+admin.site.register(MessageRecipient)
+admin.site.register(Message)
+admin.site.register(Mailing)
+admin.site.register(MailingAttempt)
