@@ -43,7 +43,7 @@ class Mailing(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='mailings')
     recipients = models.ManyToManyField(MessageRecipient)
     owner = models.ForeignKey(CustomUser, on_delete=CASCADE, verbose_name='Владелец рассылки', blank=True, null=True)
-    is_active = models.BooleanField(verbose_name='Заблокирована/Не заблокирована', default=True)
+    is_active = models.BooleanField(default=True)
 
 
     def __str__(self):

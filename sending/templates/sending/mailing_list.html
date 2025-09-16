@@ -22,7 +22,7 @@
             <div class="card w-100">
                 {% for mailing in mailings %}
                     <ul class="list-group list-group-flush">
-                        <a class="card-link" href="#">
+                        <a class="card-link" href="{% url 'sending:mailing_detail' mailing.id %}">
                             <li class="list-group-item">{{ mailing }}</li>
                         </a>
                     </ul>

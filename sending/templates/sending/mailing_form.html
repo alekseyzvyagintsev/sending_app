@@ -2,27 +2,25 @@
 {% block title %}Форма для рассылки{% endblock %}
 
 {% block content %}
-
     <div class="container">
-        <h1 class="mb-5">Форма для рассылки</h1>
+        <h1 class="mb-5">Форма для рассылки {{ mailing.id }}</h1>
         <form method="post" class="form-floating" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.as_p }}
             {% if mailing.id %}
-                {% if mailing.is_active is True %}
-                    <button type="submit" class="btn btn-lg btn-block btn-outline-primary mt-3 mb-1">Заблокировать
-                        рассылку
-                    </button>
-                {% endif %}
-                {% if mailing.is_active is False or mailing.is_active is None %}
-                    <button type="submit" class="btn btn-lg btn-block btn-outline-primary mt-3 mb-1">Разблокировать
-                        рассылку
-                    </button>
-                {% endif %}
+                <a href="{% url 'sending:mailing_blocking' mailing.id %}"
+                   class="btn btn-lg btn-block btn-outline-danger mt-3 mb-1">
+                    {% if mailing.is_active %}
+                        Заблокировать рассылку
+                    {% endif %}
+                    {% if not mailing.is_active or mailing.is_active is None %}
+                        Разблокировать рассылку
+                    {% endif %}
+                </a>
             {% endif %}
             <button type="submit" class="btn btn-lg btn-block btn-outline-primary mt-3 mb-1">Сохранить</button>
-            <a href="{% url 'sending:mailing_list' %}" class="btn btn-lg btn-block btn-outline-secondary">К списку без
-                сохранения</a>
+            <a href="{% url 'sending:mailing_list' %}" class="btn btn-lg btn-block btn-outline-secondary mt-3 mb-1">К
+                списку без сохранения</a>
         </form>
     </div>
 {% endblock %}
