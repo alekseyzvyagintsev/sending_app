@@ -9,10 +9,10 @@
                 <li class="nav-item">
                     <a class="nav-link btn btn-outline-light text-light" href="{% url 'sending:contact' %}">Контакты</a>
                 </li>
-{#                <li class="nav-item">#}
-{#                    <a class="nav-link btn btn-outline-light text-light"#}
-{#                       href="{% url 'catalog:categories' %}">Категории</a>#}
-{#                </li>#}
+                <li class="nav-item">
+                    <a class="nav-link btn btn-outline-light text-light"
+                       href="{% url 'sending:mailing_create' %}">Новая рассылка</a>
+                </li>
                 <li class="nav-item">
                     {% if user.is_superuser %}
                         <a class="nav-link btn btn-outline-light text-light" href="{% url 'sending:mailing_list' %}">Все
@@ -30,9 +30,6 @@
                         <a class="nav-link btn btn-outline-light text-light" href="{% url 'users:profile' user.id %}">Профиль</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-light text-light" href="{% url 'admin:index' %}">Админка</a>
-                    </li>
-                    <li class="nav-item">
                         <form method="post" action="{% url 'users:logout' %}">
                             {% csrf_token %}
                             <button type="submit" class="nav-link btn btn-outline-light text-light">Выход</button>
@@ -48,6 +45,11 @@
                     <li>
                         <a class="nav-link btn btn-outline-light text-light"
                            href="{% url 'users:register' %}">Регистрация</a>
+                    </li>
+                {% endif %}
+                {% if user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light text-light" href="{% url 'admin:index' %}">Админка</a>
                     </li>
                 {% endif %}
             </ul>
