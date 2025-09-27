@@ -1,4 +1,6 @@
 ###############################################################################################################
+from django.utils import timezone
+
 from django.db import models
 from django.db.models import CASCADE
 
@@ -18,6 +20,7 @@ class Message(models.Model):
     subject = models.CharField(max_length=50, verbose_name='Тема сообщения')
     body_text = models.TextField(blank=True, null=True)
     owner = models.ForeignKey(CustomUser, on_delete=CASCADE, verbose_name='Владелец рассылки', blank=True, null=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f'Тема - "{self.subject}",\nСодержание: {self.body_text}'
@@ -25,6 +28,8 @@ class Message(models.Model):
     class Meta:
         verbose_name = 'Сообщение'
         verbose_name_plural = 'Сообщения'
+        db_table = "message"
+        permissions = [('block_message', 'Блокировка сообщения'),]
 
 
 class Mailing(models.Model):
@@ -47,11 +52,15 @@ class Mailing(models.Model):
 
 
     def __str__(self):
+        # Локализуем дату начала и окончания рассылки
+        start_localized = timezone.localtime(self.start_sending) if self.start_sending else None
+        stop_localized = timezone.localtime(self.stop_sending) if self.stop_sending else None
+
         return f"""
         Рассылка {self.is_active}:\n
         Статус: {self.status},\n
-        Начало рассылки: {self.start_sending},\n
-        Окончание рассылки: {self.start_sending}
+        Начало рассылки: {start_localized},\n
+        Окончание рассылки: {stop_localized}
         """
     class Meta:
         verbose_name = 'Рассылка'

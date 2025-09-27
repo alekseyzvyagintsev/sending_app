@@ -11,13 +11,19 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link btn btn-outline-light text-light"
+                       href="{% url 'sending:message_create' %}">Новое Сообщение</a>
+                    <a class="nav-link btn btn-outline-light text-light"
                        href="{% url 'sending:mailing_create' %}">Новая рассылка</a>
                 </li>
                 <li class="nav-item">
                     {% if user.is_superuser %}
+                        <a class="nav-link btn btn-outline-light text-light" href="{% url 'sending:messages_list' %}">Все
+                            сообщения</a>
                         <a class="nav-link btn btn-outline-light text-light" href="{% url 'sending:mailing_list' %}">Все
                             рассылки</a>
                     {% elif user.is_authenticated %}
+                        <a class="nav-link btn btn-outline-light text-light"
+                            href="{% url 'sending:messages_list' %}">Ваши сообщения</a>
                         <a class="nav-link btn btn-outline-light text-light"
                             href="{% url 'sending:mailing_list' %}">Ваши рассылки</a>
                     {% endif %}

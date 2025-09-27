@@ -1,0 +1,32 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Сообщения{% endblock %}
+
+{% block content %}
+    <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+        {% if user.is_superuser or perms.sending.can_view_message %}
+            <h1 class="display-4 px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Полный список сообщений</h1>
+        {% else %}
+            <h1 class="display-4 px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Список Ваших сообщений</h1>
+        {% endif %}
+    </div>
+    <div class="container mt-5">
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+            <a href="{% url 'sending:message_create' %}" class="btn btn-sm btn-outline-primary mt-2 mb-1">Создать новое
+                сообщение</a>
+        </div>
+        <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+            <h1 class="display-4">Всего создано {{ messages_count }} сообщени(е/я/й).</h1>
+        </div>
+        <div class="container mt-5 mb-5">
+            <div class="card w-100">
+                {% for message in messages %}
+                    <ul class="list-group list-group-flush">
+                        <a class="card-link" href="{% url 'sending:message_detail' message.id %}">
+                            <li class="list-group-item">{{ message }}</li>
+                        </a>
+                    </ul>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
