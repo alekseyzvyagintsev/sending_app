@@ -3,7 +3,7 @@ name = "sending_app"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "alekseyzvyagintsev", email = "alex0236889@gmail.com"}
+    {name = "Aleksey Zvyagintsev", email = "alex0236889@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.12"
