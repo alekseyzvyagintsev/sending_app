@@ -2,6 +2,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.core.files.storage import FileSystemStorage
+from django.http import HttpResponseForbidden
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, UpdateView, DeleteView
 from django.views.generic.edit import CreateView, FormMixin
@@ -58,16 +59,19 @@ class RegisterView(CreateView):
     success_url = reverse_lazy('users:login')
 
     def form_valid(self, form):
-        user = form.save()
-        login(self.request, user)
+        user = form.save(commit=False)                  # Создаем объект пользователя, но пока не сохраняем
+        password = form.cleaned_data.get("password1")   # Берём введённый пароль
+        user.set_password(password)                     # Устанавливаем пароль с использованием set_password
+        user.save()                                     # Сохраняем пользователя
+        login(self.request, user)                       # Авторизуем пользователя
         self.send_welcome_email(user.email)
         return super().form_valid(form)
 
     def send_welcome_email(self, user_email):
         subject = 'Добро пожаловать в наш сервис'
         message = 'Спасибо, что зарегистрировались в нашем сервисе!'
-        recipient_list = [user_email]
-        send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
+        recipients_list = [user_email]
+        send_mail(subject, message, settings.EMAIL_HOST_USER, recipients_list)
 
 
 class ProfileDetailView(LoginRequiredMixin, DetailView):
@@ -87,6 +91,17 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = CustomUser
     form_class = ProfileEditForm
     template_name = "users/register.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        # Получаем объект модели
+        obj = self.get_object()
+
+        # Если пользователь не является владельцем, запрещаем смену пароля
+        if not obj.owner == self.request.user:
+            return HttpResponseForbidden("Вы не имеете прав на смену пароля этого пользователя.")
+
+        # Если проверка прошла успешно, выполняем стандартную смену пароля
+        return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         # Определение URL после успешной операции
