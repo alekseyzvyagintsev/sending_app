@@ -17,13 +17,12 @@
         </div>
         <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
             <h4 class="display-4">Всего совершено {{ attempts_count }} попыт(ка/ки/ок) рассыл(ки/ок).</h4>
-            <p>{{ mailingattempt_list }}</p>
         </div>
         <div class="container mt-5 mb-5">
             <div class="card w-100">
-                {% for attempt in attempts %}
+                {% for attempt in mailing_attempts %}
                     <ul class="list-group list-group-flush">
-                        <a class="card-link" href="#{#% url 'sending:attempt_detail' attempt.id %#}">
+                        <a class="card-link" href="{% url 'sending:attempt_detail' attempt.id %}">
                             <li class="list-group-item">{{ attempt }}</li>
                         </a>
                     </ul>

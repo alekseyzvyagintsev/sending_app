@@ -6,12 +6,13 @@
         {% if user.is_superuser or perms.sending.can_view_mailing_attempt or mailing_detail.owner == attempt.owner %}
             <ul class="list-group list-group-flush">
                 <a>
-                    <li class="list-group-item">Попытка №{{ attempt_detail.id }}</li>
-                    <li class="list-group-item">Стартовала {{ attempt_detail.attempted_at }}</li>
-                    <li class="list-group-item">Завершилась {{ attempt_detail.end_at }}</li>
-                    <li class="list-group-item">Владелец {{ attempt_detail.owner }}</li>
-                    <li class="list-group-item">Получатель {{ attempt_detail.recipient }}</li>
-                    <li class="list-group-item">Статус отправления {{ attempt_detail.status }}</li>
+                    <li class="list-group-item">Попытка № {{ attempt.id }}</li>
+                    <li class="list-group-item">Стартовала: {{ attempt.attempted_at }}</li>
+                    <li class="list-group-item">Завершилась: {{ attempt.end_at }}</li>
+                    <li class="list-group-item">Владелец: {{ attempt.owner }}</li>
+                    <li class="list-group-item">Получатель: {{ attempt.recipient }}</li>
+                    <li class="list-group-item">Статус отправления: {{ attempt.status }}</li>
+                    <li class="list-group-item">Ответ сервера: {{ attempt.server_response }}</li>
                 </a>
             </ul>
             <div class="container mt-5">

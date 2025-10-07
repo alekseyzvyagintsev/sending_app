@@ -162,7 +162,15 @@ class MailingListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         """Добавляем дополнительные данные в контекст шаблона"""
         context = super().get_context_data(**kwargs)
-        mailings = Mailing.objects.all()
+        mailings = Mailing.objects.all() # Все рассылки
+        data = []
+        for mailing in mailings:
+            total_attempts_count = mailing.attempt_set.count()  # Подсчет общего числа попыток
+            data.append({
+                'mailing': mailing,
+                'total_attempts_count': total_attempts_count
+            })
+        context['data'] = data
         context["mailings"] = mailings
         # Передаем количество рассылок
         context["mailings_count"] = len(mailings)
@@ -215,9 +223,10 @@ class MailingDetailView(LoginRequiredMixin, DetailView):
         # Фильтруем получателей по текущей рассылки
         recipient_in_mailing = MessageRecipient.objects.filter(mailing=mailing_id)
         # Передаём получателей в контекст
-        context["recipients"] = recipient_in_mailing
+        context['recipients'] = recipient_in_mailing
         # Передаем количество получателей в рассылки
-        context["recipient_count"] = len(recipient_in_mailing)
+        context['recipient_count'] = len(recipient_in_mailing)
+        context['mailing_id'] = mailing_id
         return context
 
 
@@ -327,15 +336,6 @@ class RecipientDetailView(LoginRequiredMixin, DetailView):
     template_name = "sending/recipient_detail.html"
     context_object_name = "recipient"
 
-    # def get_request(self):
-    #     request = super().get_queryset()
-
-    # request = cache.get('cached_request')
-    # if not request:
-    #     request = super().get_queryset()
-    #     cache.set('cached_request', request, 60 * 15)
-    # return request
-
 
 class RecipientUpdateView(LoginRequiredMixin, UpdateView):
     model = MessageRecipient
@@ -409,48 +409,49 @@ class MailingAttemptsView(LoginRequiredMixin, ListView):
     model = MailingAttempt
     paginate_by = 20
     template_name = 'sending/mailing_attempts.html'
-
-    # context_object_name = 'mailing_attempts'
+    context_object_name = 'mailing_attempts'
 
     def get_queryset(self):
         user = self.request.user
-        mailing_id = self.kwargs.get('mailing_id')
+        mailing_id = self.kwargs.get('pk', None)
         if user.is_superuser or user.has_perm('sending.view_mailing_attempt'):
-            queryset = super().get_queryset().filter(
-                mailing_id=mailing_id)  # Показываем ВСЕ попытки рассылок, если у пользователя есть соответствующее право
+            queryset = super().get_queryset()
+            # Показываем ВСЕ попытки рассылок, если у пользователя есть соответствующее право
+            if mailing_id is not None:
+                queryset = super().get_queryset().filter(mailing_id=mailing_id)
         else:
-            queryset = super().get_queryset().filter(owner=user,
-                                                     mailing_id=mailing_id)  # Иначе показываем только собственные попытки рассылок
+            queryset = super().get_queryset().filter(owner=user)
+            # Иначе показываем только собственные попытки рассылок
+            if mailing_id is not None:
+                queryset = super().get_queryset().filter(mailing_id=mailing_id)
         return queryset.order_by("attempted_at")
 
     def get_context_data(self, **kwargs):
         """Добавляем дополнительные данные в контекст шаблона"""
         context = super().get_context_data(**kwargs)
-        attempts = MailingAttempt.objects.filter(mailing_id=self.kwargs.get('mailing_id'))
-        # Передаем количество рассылок
-        context.update({"attempts": attempts, "attempts_count": len(attempts), })
+        context['attempts_count'] = len(context['mailing_attempts'])
         return context
 
 
 class MailingAttemptView(LoginRequiredMixin, DetailView):
     model = MailingAttempt
     template_name = "sending/attempt_detail.html"
-    context_object_name = "attempts"
+    context_object_name = "attempt"
 
     def get_queryset(self):
-        # Возвращаем только активные попытки для выбранной рассылки
-        queryset = MailingAttempt.objects.filter(mailing=self.kwargs.get('mailing_id'))
-        return queryset.order_by('-attempted_at')
-
-    def get_context_data(self, **kwargs):
-        """Добавляем сообщения данной рассылки в контекст шаблона"""
-        context = super().get_context_data(**kwargs)
-        # Берём объект текущей рассылки
-        mailing = self.object
-        # Получаем все попытки отправки для текущей рассылки
-        attempts = MailingAttempt.objects.filter(mailing=self.kwargs.get('mailing_id'))
-        context.update({"attempts_count": len(attempts), "mailing": mailing})
-        return context
+        user = self.request.user
+        attempt_id = self.kwargs.get('pk', None)
+        if user.is_superuser or user.has_perm('sending.view_attempt'):
+            queryset = super().get_queryset()
+            # Показываем ВСЕ попытки рассылок, если у пользователя есть соответствующее право
+            if attempt_id is not None:
+                queryset = super().get_queryset().filter(pk=attempt_id)
+        else:
+            queryset = super().get_queryset().filter(owner=user)
+            # Иначе показываем только собственные попытки рассылок
+            if attempt_id is not None:
+                queryset = super().get_queryset().filter(pk=attempt_id)
+        return queryset
 
 
 class SendMailingView(LoginRequiredMixin, FormView):
@@ -465,19 +466,6 @@ class SendMailingView(LoginRequiredMixin, FormView):
             return redirect(reverse_lazy('sending:mailing_attempts', args=(mailing_id,)))
         else:
             return self.form_invalid(form)
-    # permanent = False
-    #
-    # def get_redirect_url(self, *args, **kwargs):
-    #     mailing_id = kwargs['pk']
-    #     try:
-    #         # Запускаем отправку рассылки
-    #         perform_send(mailing_id)
-    #
-    #         # Перенаправляем пользователя на страницу с результатами
-    #         return HttpResponseForbidden(reverse('sending:mailing_attempts', args=mailing_id))
-    #
-    #     except Exception as e:
-    #         print(e)
-    #         return HttpResponseForbidden(reverse('sending:mailing_attempts', args=mailing_id))
+
 
 ################################################################################################

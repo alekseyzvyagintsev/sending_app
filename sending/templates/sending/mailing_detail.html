@@ -40,9 +40,11 @@
                     <form action="{% url 'sending:send_mailing' mailing.pk %}" method="post">
                         {% csrf_token %}
                         <input type="hidden" name="mailing_id" value="{{ mailing.pk }}"/>
-                        <button type="submit" class="btn btn-sm btn-outline-danger mt-2 mb-1">Запустить рассылку
+                        <button type="submit" class="btn btn-sm btn-outline-primary mt-2 mb-1">Запустить рассылку
                         </button>
                     </form>
+                    <a href="{% url 'sending:mailing_attempts' mailing.id %}"
+                       class="btn btn-sm btn-outline-secondary mt-2 mb-1">История рассылки</a>
                     <a href="#" class="btn btn-sm btn-outline-secondary mt-2 mb-1">Статистика рассылок</a>
                 </div>
                 <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">

@@ -20,10 +20,12 @@
         </div>
         <div class="container mt-5 mb-5">
             <div class="card w-100">
-                {% for mailing in mailings %}
+                {% for items in data %}
                     <ul class="list-group list-group-flush">
-                        <a class="card-link" href="{% url 'sending:mailing_detail' mailing.id %}">
-                            <li class="list-group-item">{{ mailing }}</li>
+                        <a class="card-link" href="{% url 'sending:mailing_detail' items.mailing.id %}">
+                            <li class="list-group-item">{{ items.mailing }} - Всего
+                                попыток: {{ items.total_attempts_count }} шт.
+                            </li>
                         </a>
                     </ul>
                 {% endfor %}

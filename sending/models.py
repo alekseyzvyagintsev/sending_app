@@ -64,12 +64,12 @@ class Mailing(models.Model):
         start_localized = timezone.localtime(self.start_sending) if self.start_sending else None
         stop_localized = timezone.localtime(self.stop_sending) if self.stop_sending else None
 
-        return f"""
+        return(f"""
         Рассылка {self.is_active}:\n
         Статус: {self.status},\n
         Начало рассылки: {start_localized},\n
         Окончание рассылки: {stop_localized}
-        """
+        """)
 
     class Meta:
         verbose_name = 'Рассылка'
@@ -95,10 +95,11 @@ class MailingAttempt(models.Model):
     owner = models.ForeignKey(MessageRecipient, on_delete=CASCADE, related_name='owner_attempts', default=1)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SUCCESSFULLY')
     server_response = models.TextField(blank=True, null=True)
-    mailing = models.ForeignKey(Mailing, on_delete=CASCADE, verbose_name='Рассылка', blank=True, null=True)
+    mailing = models.ForeignKey(Mailing, on_delete=CASCADE, verbose_name='Рассылка', related_name='attempt_set',
+                                blank=True, null=True)
 
     def __str__(self):
-        return(f'Получатель - {self.recipient}, статус отправки {self.status}.')
+        return(f'Email получателя - {self.recipient.email}, статус отправки {self.status}. Попытка принадлежит рассылке № {self.mailing.id}.')
 
     class Meta:
         unique_together = ['mailing', 'recipient']
