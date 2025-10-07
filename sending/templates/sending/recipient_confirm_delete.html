@@ -1,0 +1,13 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Удаление получателя{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="mb-5">Удаление получателя: {{ recipient.fullname }}</h1>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ object.pk }}"/>
+            <button type="submit" class="btn btn-lg btn-block btn-outline-danger mt-3 mb-1">Удалить</button>
+        </form>
+    </div>
+{% endblock %}

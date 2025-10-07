@@ -1,0 +1,26 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Форма для сообщения{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="mb-5">Форма для сообщения{{ mailing.id }}</h1>
+        <form method="post" class="form-floating" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            {% if message.id %}
+                <a href="{% url 'sending:message_blocking' message.id %}"
+                   class="btn btn-lg btn-block btn-outline-danger mt-3 mb-1">
+                    {% if message.is_active %}
+                        Заблокировать сообщение
+                    {% endif %}
+                    {% if not message.is_active or message.is_active is None %}
+                        Разблокировать сообщение
+                    {% endif %}
+                </a>
+            {% endif %}
+            <button type="submit" class="btn btn-lg btn-block btn-outline-primary mt-3 mb-1">Сохранить</button>
+            <a href="{% url 'sending:messages_list' %}" class="btn btn-lg btn-block btn-outline-secondary mt-3 mb-1">К
+                списку без сохранения</a>
+        </form>
+    </div>
+{% endblock %}
