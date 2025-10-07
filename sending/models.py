@@ -11,9 +11,18 @@ class MessageRecipient(models.Model):
     email = models.EmailField(unique=True)
     fullname = models.CharField(max_length=50)
     comment = models.TextField()
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name='Владелец рассылки', blank=True,
+                              null=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f'Получатель: {self.fullname} - {self.email}'
+        return f'{self.fullname} - {self.email} - {self.comment}'
+
+    class Meta:
+        verbose_name = 'Получатель'
+        verbose_name_plural = 'Получатели'
+        db_table = "recipient"
+        permissions = [('deactivate_recipient', 'Деактивация получателя'), ]
 
 
 class Message(models.Model):
@@ -29,7 +38,7 @@ class Message(models.Model):
         verbose_name = 'Сообщение'
         verbose_name_plural = 'Сообщения'
         db_table = "message"
-        permissions = [('block_message', 'Блокировка сообщения'),]
+        permissions = [('block_message', 'Блокировка сообщения'), ]
 
 
 class Mailing(models.Model):
@@ -50,7 +59,6 @@ class Mailing(models.Model):
     owner = models.ForeignKey(CustomUser, on_delete=CASCADE, verbose_name='Владелец рассылки', blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
-
     def __str__(self):
         # Локализуем дату начала и окончания рассылки
         start_localized = timezone.localtime(self.start_sending) if self.start_sending else None
@@ -62,12 +70,13 @@ class Mailing(models.Model):
         Начало рассылки: {start_localized},\n
         Окончание рассылки: {stop_localized}
         """
+
     class Meta:
         verbose_name = 'Рассылка'
         verbose_name_plural = 'Рассылки'
         ordering = ["start_sending", "status", "is_active"]
         db_table = "mailing"
-        permissions = [('block_mailing', 'Блокировка рассылки'),]
+        permissions = [('block_mailing', 'Блокировка рассылки'), ]
 
 
 class MailingAttempt(models.Model):
@@ -76,12 +85,27 @@ class MailingAttempt(models.Model):
     """
     STATUS_CHOICES = [
         ('SUCCESSFULLY', 'Успешно'),
-        ('NOT SUCCESSFUL', 'Запущена'),
+        ('UNSUCCESSFULLY', 'Неуспешно'),
     ]
 
-    date_attempt = models.DateTimeField(max_length=20, choices=STATUS_CHOICES, default='SUCCESSFULLY')
+    attempted_at = models.DateTimeField(auto_now_add=True)
+    end_at = models.DateTimeField(blank=True, null=True)
+    recipient = models.ForeignKey(MessageRecipient, on_delete=models.CASCADE, related_name='recipient_attempts',
+                                  blank=True, null=True)
+    owner = models.ForeignKey(MessageRecipient, on_delete=CASCADE, related_name='owner_attempts', default=1)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SUCCESSFULLY')
     server_response = models.TextField(blank=True, null=True)
     mailing = models.ForeignKey(Mailing, on_delete=CASCADE, verbose_name='Рассылка', blank=True, null=True)
 
+    def __str__(self):
+        return(f'Получатель - {self.recipient}, статус отправки {self.status}.')
+
+    class Meta:
+        unique_together = ['mailing', 'recipient']
+        verbose_name = 'Попытка рассылки'
+        verbose_name_plural = 'Попытки рассылок'
+        ordering = ["attempted_at", ]
+        db_table = "mailing_attempt"
+        permissions = [('block_mailing_attempt', 'Блокировка попытки рассылки'), ]
 
 ###############################################################################################################
