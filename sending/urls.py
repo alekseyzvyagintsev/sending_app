@@ -14,9 +14,16 @@ from sending.views import (ContactView,
                            MessageDetailView,
                            MessageUpdateView,
                            MessageDeleteView,
-                           MessageBlockingView)
+                           MessageBlockingView,
+                           RecipientListView,
+                           RecipientCreateView,
+                           RecipientDetailView,
+                           RecipientUpdateView,
+                           RecipientDeleteView,
+                           RecipientBlockingView, MailingAttemptsView, MailingAttemptView, SendMailingView)
 
 app_name = SendingConfig.name
+
 
 urlpatterns = [
     path("contact/", ContactView.as_view(), name="contact"),
@@ -32,8 +39,15 @@ urlpatterns = [
     path("mailing/update/<int:pk>/", MailingUpdateView.as_view(), name="mailing_update"),
     path("mailing/delete/<int:pk>/", MailingDeleteView.as_view(), name="mailing_delete"),
     path("mailing/blocking/<int:pk>/", MailingBlockingView.as_view(), name="mailing_blocking"),
-#     path("attempts/<int:pk>/", MailingAttemptsView.as_view(), name="attempts_list"),
-#     path("attempt/<int:pk>/", MailingAttemptView.as_view(), name="attempt_detail"),
+    path('recipients/', RecipientListView.as_view(), name='recipients_list'),
+    path('recipient/create/', RecipientCreateView.as_view(), name='recipient_create'),
+    path('recipient/detail/<int:pk>/', RecipientDetailView.as_view(), name='recipient_detail'),
+    path("recipient/update/<int:pk>/", RecipientUpdateView.as_view(), name="recipient_update"),
+    path("recipient/delete/<int:pk>/", RecipientDeleteView.as_view(), name="recipient_delete"),
+    path("recipient/blocking/<int:pk>/", RecipientBlockingView.as_view(), name="recipient_blocking"),
+    path("attempts/<int:pk>/", MailingAttemptsView.as_view(), name="mailing_attempts"),
+    path("attempt/<int:pk>/", MailingAttemptView.as_view(), name="attempt_detail"),
+    path("send_mailing/<int:pk>/", SendMailingView.as_view(), name="send_mailing"),
 #     path("statistics/", StatisticsView.as_view(), name="statistics"),
 ]
 

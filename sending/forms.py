@@ -1,7 +1,7 @@
 ####################################################################################################
 from django import forms
 
-from sending.models import Mailing, Message
+from sending.models import Mailing, Message, MessageRecipient
 
 
 class MessageForm(forms.ModelForm):
@@ -34,6 +34,25 @@ class BlockMailingForm(forms.ModelForm):
         model = Mailing
         fields = ['is_active',]
         widgets = {'is_active': forms.CheckboxInput(),}
+
+
+class MessageRecipientForm(forms.ModelForm):
+    class Meta:
+        model = MessageRecipient
+        fields = ['email', 'fullname', 'comment', 'is_active']
+        widgets = {'is_active': forms.CheckboxInput(),}
+
+
+class BlockMessageRecipientForm(forms.ModelForm):
+    class Meta:
+        model = MessageRecipient
+        fields = ['is_active',]
+        widgets = {'is_active': forms.CheckboxInput(),}
+
+
+class SendMailingForm(forms.Form):
+    mailing_id = forms.IntegerField(widget=forms.HiddenInput())
+
 
 
 ####################################################################################################

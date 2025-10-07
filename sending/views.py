@@ -1,15 +1,18 @@
 ################################################################################################
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views import View
-from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, RedirectView, FormView
 
-from sending.forms import MailingForm, BlockMailingForm, MessageForm, BlockMessageForm
+from sending.forms import MailingForm, BlockMailingForm, MessageForm, BlockMessageForm, MessageRecipientForm, \
+    BlockMessageRecipientForm, SendMailingForm
 from sending.models import Mailing, MailingAttempt, Message, MessageRecipient
+from sending.operator import perform_send
 
 
 class ContactView(View):
@@ -30,6 +33,7 @@ class MessageListView(LoginRequiredMixin, ListView):
     paginate_by = 20
     template_name = 'sending/messages_list.html'
     context_object_name = 'messages'
+
     # permission_required = 'sending.view_mailing'
 
     def get_queryset(self):
@@ -43,10 +47,10 @@ class MessageListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         """Добавляем дополнительные данные в контекст шаблона"""
         context = super().get_context_data(**kwargs)
-        messages = Message.objects.all()
-        context["messages"] = messages
+        obj_messages = Message.objects.all()
+        context["messages"] = obj_messages
         # Передаем количество сообщений
-        context["messages_count"] = len(messages)
+        context["messages_count"] = len(obj_messages)
         return context
 
 
@@ -56,6 +60,7 @@ class MessageCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     template_name = "sending/message_form.html"
     success_message = "Вы успешно создали новое сообщение!"
     success_url = reverse_lazy("sending:messages_list")
+
     # permission_required = 'catalog.add_mailing'
 
     def form_valid(self, form):
@@ -76,7 +81,6 @@ class MessageCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return super().form_valid(form)
 
 
-
 class MessageDetailView(LoginRequiredMixin, DetailView):
     model = Message
     template_name = "sending/message_detail.html"
@@ -85,11 +89,11 @@ class MessageDetailView(LoginRequiredMixin, DetailView):
     # def get_request(self):
     #     request = super().get_queryset()
 
-        # request = cache.get('cached_request')
-        # if not request:
-        #     request = super().get_queryset()
-        #     cache.set('cached_request', request, 60 * 15)
-        # return request
+    # request = cache.get('cached_request')
+    # if not request:
+    #     request = super().get_queryset()
+    #     cache.set('cached_request', request, 60 * 15)
+    # return request
 
 
 class MessageUpdateView(LoginRequiredMixin, UpdateView):
@@ -144,6 +148,7 @@ class MailingListView(LoginRequiredMixin, ListView):
     paginate_by = 20
     template_name = 'sending/mailing_list.html'
     context_object_name = 'mailings'
+
     # permission_required = 'sending.view_mailing'
 
     def get_queryset(self):
@@ -170,6 +175,7 @@ class MailingCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     template_name = "sending/mailing_form.html"
     success_message = "Вы успешно создали новую рассылку!"
     success_url = reverse_lazy("sending:mailing_list")
+
     # permission_required = 'catalog.add_mailing'
 
     def form_valid(self, form):
@@ -214,21 +220,13 @@ class MailingDetailView(LoginRequiredMixin, DetailView):
         context["recipient_count"] = len(recipient_in_mailing)
         return context
 
-    # def get_request(self):
-    #     request = super().get_queryset()
-
-        # request = cache.get('cached_request')
-        # if not request:
-        #     request = super().get_queryset()
-        #     cache.set('cached_request', request, 60 * 15)
-        # return request
-
 
 class MailingUpdateView(LoginRequiredMixin, UpdateView):
     model = Mailing
     form_class = MailingForm
     template_name = "sending/mailing_form.html"
     success_url = reverse_lazy("sending:mailing_list")
+
 
 class MailingBlockingView(LoginRequiredMixin, UpdateView):
     model = Mailing
@@ -268,5 +266,218 @@ class MailingDeleteView(LoginRequiredMixin, DeleteView):
         # Если проверка прошла успешно, выполняем стандартное удаление
         return super().dispatch(request, *args, **kwargs)
 
+
+# CRUD для Клиентов
+class RecipientListView(LoginRequiredMixin, ListView):
+    model = MessageRecipient
+    paginate_by = 20
+    template_name = 'sending/recipients_list.html'
+    context_object_name = 'recipients'
+
+    # permission_required = 'sending.view_recipient'
+
+    def get_queryset(self):
+        if self.request.user.is_superuser or self.request.user.has_perm('sending.view_recipients'):
+            queryset = super().get_queryset()  # Показываем ВСЕХ получателей, если у пользователя есть соответствующее право
+        else:
+            queryset = super().get_queryset().filter(
+                owner=self.request.user)  # Иначе показываем только собственных получателей
+        return queryset.order_by("owner")
+
+    def get_context_data(self, **kwargs):
+        """Добавляем дополнительные данные в контекст шаблона"""
+        context = super().get_context_data(**kwargs)
+        recipients = MessageRecipient.objects.all()
+        context["recipients"] = recipients
+        # Передаем количество сообщений
+        context["recipients_count"] = len(recipients)
+        return context
+
+
+class RecipientCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = MessageRecipient
+    form_class = MessageRecipientForm
+    template_name = "sending/recipient_form.html"
+    success_message = "Вы успешно создали нового получателя!"
+    success_url = reverse_lazy("sending:recipients_list")
+
+    # permission_required = 'catalog.add_recipient'
+
+    def form_valid(self, form):
+        """
+        Метод вызывается, когда форма прошла валидацию.
+        Здесь мы добавляем текущего пользователя в качестве владельца получателя.
+        """
+        # Получаем объект получателя из формы
+        obj = form.save(commit=False)
+        # Устанавливаем текущего пользователя в качестве владельца
+        obj.owner = self.request.user
+        # Сохраняем объект получателя в базе данных
+        try:
+            obj.save()
+        except Exception as e:
+            messages.error(self.request, f"Произошла ошибка при создании получателя: {e}")
+            return redirect('sending:create_recipient')
+        # Возвращаем стандартный ответ родительского класса
+        return super().form_valid(form)
+
+
+class RecipientDetailView(LoginRequiredMixin, DetailView):
+    model = MessageRecipient
+    template_name = "sending/recipient_detail.html"
+    context_object_name = "recipient"
+
+    # def get_request(self):
+    #     request = super().get_queryset()
+
+    # request = cache.get('cached_request')
+    # if not request:
+    #     request = super().get_queryset()
+    #     cache.set('cached_request', request, 60 * 15)
+    # return request
+
+
+class RecipientUpdateView(LoginRequiredMixin, UpdateView):
+    model = MessageRecipient
+    form_class = MessageRecipientForm
+    template_name = "sending/recipient_form.html"
+    success_url = reverse_lazy("sending:recipients_list")
+
+    def form_valid(self, form):
+        """
+        Метод вызывается, когда форма прошла валидацию.
+        Здесь мы добавляем текущего пользователя в качестве владельца получателя.
+        """
+        # Получаем объект получателя из формы
+        obj = form.save(commit=False)
+        if obj.owner is None:
+            # Устанавливаем текущего пользователя в качестве владельца
+            obj.owner = self.request.user
+        # Сохраняем объект получателя в базе данных
+        try:
+            obj.save()
+        except Exception as e:
+            messages.error(self.request, f"Произошла ошибка при создании получателя: {e}")
+            return redirect('sending:create_recipient')
+        # Возвращаем стандартный ответ родительского класса
+        return super().form_valid(form)
+
+
+class RecipientBlockingView(LoginRequiredMixin, UpdateView):
+    model = MessageRecipient
+    form_class = BlockMessageRecipientForm
+    template_name = "sending/block_recipient_form.html"
+    success_url = reverse_lazy("sending:recipients_list")
+    context_object_name = "recipient"
+
+    def post(self, request, *args, **kwargs):
+        recipient = get_object_or_404(MessageRecipient, pk=self.kwargs['pk'])
+        user = self.request.user
+        if user == recipient.owner or request.user.has_perm('sending.deactivate_recipient'):
+            if recipient.is_active:
+                recipient.is_active = False
+            else:
+                recipient.is_active = True
+            recipient.save()
+
+        return redirect('sending:recipients_list')
+
+
+class RecipientDeleteView(LoginRequiredMixin, DeleteView):
+    model = MessageRecipient
+    template_name = "sending/recipient_confirm_delete.html"
+    success_url = reverse_lazy("sending:recipients_list")
+    context_object_name = "recipient"
+
+    def dispatch(self, request, *args, **kwargs):
+        # Получаем объект модели
+        obj = self.get_object()
+
+        # Проверяем, принадлежит ли пользователь группе менеджеров
+        is_manager = Group.objects.filter(name='Менеджер', user=self.request.user).exists()
+
+        # Если пользователь не является ни владельцем, ни менеджером, запрещаем удаление
+        if not (self.request.user.is_superuser or is_manager or obj.owner == self.request.user):
+            return HttpResponseForbidden("Вы не имеете прав на удаление этого получателя.")
+
+        # Если проверка прошла успешно, выполняем стандартное удаление
+        return super().dispatch(request, *args, **kwargs)
+
+
+# # CRUD для попыток рассылок
+class MailingAttemptsView(LoginRequiredMixin, ListView):
+    model = MailingAttempt
+    paginate_by = 20
+    template_name = 'sending/mailing_attempts.html'
+
+    # context_object_name = 'mailing_attempts'
+
+    def get_queryset(self):
+        user = self.request.user
+        mailing_id = self.kwargs.get('mailing_id')
+        if user.is_superuser or user.has_perm('sending.view_mailing_attempt'):
+            queryset = super().get_queryset().filter(
+                mailing_id=mailing_id)  # Показываем ВСЕ попытки рассылок, если у пользователя есть соответствующее право
+        else:
+            queryset = super().get_queryset().filter(owner=user,
+                                                     mailing_id=mailing_id)  # Иначе показываем только собственные попытки рассылок
+        return queryset.order_by("attempted_at")
+
+    def get_context_data(self, **kwargs):
+        """Добавляем дополнительные данные в контекст шаблона"""
+        context = super().get_context_data(**kwargs)
+        attempts = MailingAttempt.objects.filter(mailing_id=self.kwargs.get('mailing_id'))
+        # Передаем количество рассылок
+        context.update({"attempts": attempts, "attempts_count": len(attempts), })
+        return context
+
+
+class MailingAttemptView(LoginRequiredMixin, DetailView):
+    model = MailingAttempt
+    template_name = "sending/attempt_detail.html"
+    context_object_name = "attempts"
+
+    def get_queryset(self):
+        # Возвращаем только активные попытки для выбранной рассылки
+        queryset = MailingAttempt.objects.filter(mailing=self.kwargs.get('mailing_id'))
+        return queryset.order_by('-attempted_at')
+
+    def get_context_data(self, **kwargs):
+        """Добавляем сообщения данной рассылки в контекст шаблона"""
+        context = super().get_context_data(**kwargs)
+        # Берём объект текущей рассылки
+        mailing = self.object
+        # Получаем все попытки отправки для текущей рассылки
+        attempts = MailingAttempt.objects.filter(mailing=self.kwargs.get('mailing_id'))
+        context.update({"attempts_count": len(attempts), "mailing": mailing})
+        return context
+
+
+class SendMailingView(LoginRequiredMixin, FormView):
+    form_class = SendMailingForm
+    template_name = 'sending/send_mailing.html'
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            mailing_id = form.cleaned_data['mailing_id']
+            perform_send(mailing_id)
+            return redirect(reverse_lazy('sending:mailing_attempts', args=(mailing_id,)))
+        else:
+            return self.form_invalid(form)
+    # permanent = False
+    #
+    # def get_redirect_url(self, *args, **kwargs):
+    #     mailing_id = kwargs['pk']
+    #     try:
+    #         # Запускаем отправку рассылки
+    #         perform_send(mailing_id)
+    #
+    #         # Перенаправляем пользователя на страницу с результатами
+    #         return HttpResponseForbidden(reverse('sending:mailing_attempts', args=mailing_id))
+    #
+    #     except Exception as e:
+    #         print(e)
+    #         return HttpResponseForbidden(reverse('sending:mailing_attempts', args=mailing_id))
 
 ################################################################################################
