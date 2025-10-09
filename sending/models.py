@@ -65,10 +65,10 @@ class Mailing(models.Model):
         stop_localized = timezone.localtime(self.stop_sending) if self.stop_sending else None
 
         return(f"""
-        Рассылка {self.is_active}:\n
-        Статус: {self.status},\n
-        Начало рассылки: {start_localized},\n
-        Окончание рассылки: {stop_localized}
+        Рассылка № {self.id}:\n
+        Старт: {start_localized.strftime('%d.%m.%Y %H:%M')},\n
+        Окончание: {stop_localized.strftime('%d.%m.%Y %H:%M')},\n
+        Статус: {self.get_status_display()}\n
         """)
 
     class Meta:
@@ -99,7 +99,11 @@ class MailingAttempt(models.Model):
                                 blank=True, null=True)
 
     def __str__(self):
-        return(f'Email получателя - {self.recipient.email}, статус отправки {self.status}. Попытка принадлежит рассылке № {self.mailing.id}.')
+        return(f'''
+        Email получателя - {self.recipient.email},\n
+        статус отправки {self.get_status_display()}.\n
+        Попытка принадлежит рассылке № {self.mailing.id}.
+        ''')
 
     class Meta:
         unique_together = ['mailing', 'recipient']

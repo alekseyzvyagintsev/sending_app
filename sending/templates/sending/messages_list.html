@@ -4,9 +4,9 @@
 {% block content %}
     <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
         {% if user.is_superuser or perms.sending.can_view_message %}
-            <h1 class="display-4 px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Полный список сообщений</h1>
+            <h1 class="px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Полный список сообщений</h1>
         {% else %}
-            <h1 class="display-4 px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Список Ваших сообщений</h1>
+            <h1 class="px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Список Ваших сообщений</h1>
         {% endif %}
     </div>
     <div class="container mt-5">
@@ -15,7 +15,7 @@
                 сообщение</a>
         </div>
         <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
-            <h1 class="display-4">Всего создано {{ messages_count }} сообщени(е/я/й).</h1>
+            <h1>Всего создано {{ messages_count }} сообщени(е/я/й).</h1>
         </div>
         <div class="container mt-5 mb-5">
             <div class="card w-100">

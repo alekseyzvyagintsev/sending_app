@@ -10,7 +10,7 @@
             {% if not recipient.is_active or recipient.is_active is None %}
                 <h3 class="card-text" style="color: red;">Получатель заблокирован</h3>
             {% endif %}
-            <h1 class="display-4 px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Получатель {{ recipient.fullname }},
+            <h1 class="px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Получатель {{ recipient.fullname }},
                 владелец: {{ recipient.owner }}</h1>
             <div class="container mt-5">
                 <div class="card w-100">
@@ -40,7 +40,7 @@
                 </div>
             </div>
         {% else %}
-            <h1 class="display-4 px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">У Вас нет права просмотра данной
+            <h1 class="px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">У Вас нет права просмотра данной
                 рассылки</h1>
         {% endif %}
     </div>

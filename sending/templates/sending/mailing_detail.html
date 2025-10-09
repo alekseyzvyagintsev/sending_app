@@ -4,8 +4,8 @@
 {% block content %}
     <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
         {% if user.is_superuser or perms.sending.can_view_mailing or mailing.owner %}
-            <h1 class="display-4 px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Рассылка {{ mailing.id }},
-                владелц: {{ mailing.owner }}, {{ mailing.status }}</h1>
+            <h3 class="px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Рассылка № {{ mailing.id }},
+                владелц: {{ mailing.owner }}, Статус рассылки: {{ mailing.get_status_display }}</h3>
             {% if mailing.is_active is True %}
                 <h3 class="card-text" style="color: green;">Рассылка активна</h3>
             {% endif %}
@@ -48,7 +48,7 @@
                     <a href="#" class="btn btn-sm btn-outline-secondary mt-2 mb-1">Статистика рассылок</a>
                 </div>
                 <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
-                    <h1 class="display-4">Всего {{ recipient_count }} получател(ь/я/ей) в рассылке.</h1>
+                    <h1>Всего {{ recipient_count }} получател(ь/я/ей) в рассылке.</h1>
                 </div>
                 <div class="container mt-5 mb-5">
                     <div class="card w-100">
@@ -63,7 +63,7 @@
                 </div>
             </div>
         {% else %}
-            <h1 class="display-4 px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">У Вас нет права просмотра данной
+            <h1 class="px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">У Вас нет права просмотра данной
                 рассылки</h1>
         {% endif %}
     </div>
