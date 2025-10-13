@@ -2,7 +2,7 @@
 {% block title %}Рассылки{% endblock %}
 
 {% block content %}
-    <div class="pricing-header px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+    <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
         {% if user.is_superuser or perms.sending.can_view_mailing %}
             <h1 class="display-4 px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Полный список рассылок</h1>
         {% else %}
@@ -15,7 +15,7 @@
                 рассылку</a>
             <a href="#" class="btn btn-sm btn-outline-secondary mt-1 mb-1">Статистика рассылок</a>
         </div>
-        <div class="pricing-header px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+        <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
             <h3 class="display-4">Всего создано {{ mailings_count }} рассыл(ка/ки/ок).</h3>
         </div>
         <div class="container mt-1 mb-1">

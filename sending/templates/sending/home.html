@@ -1,0 +1,10 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}home{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="mb-5">Всего {{ mailings_count }} рассыл(ка/ки/ок)</h1>
+        <h1 class="mb-5">Всего {{ started_mailings }} запущенных рассыл(ка/ки/ок)</h1>
+        <h1 class="mb-5">Всего {{ unique_recipients_count }} уникальны(й/х) получател(ь/я/ей)</h1>
+    </div>
+{% endblock %}

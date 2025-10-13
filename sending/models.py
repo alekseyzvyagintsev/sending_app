@@ -32,7 +32,7 @@ class Message(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f'Тема - "{self.subject}",\nСодержание: {self.body_text}'
+        return f'Тема: {self.subject}. Содержание: {self.body_text}'
 
     class Meta:
         verbose_name = 'Сообщение'
@@ -92,7 +92,7 @@ class MailingAttempt(models.Model):
     end_at = models.DateTimeField(blank=True, null=True)
     recipient = models.ForeignKey(MessageRecipient, on_delete=models.CASCADE, related_name='recipient_attempts',
                                   blank=True, null=True)
-    owner = models.ForeignKey(MessageRecipient, on_delete=CASCADE, related_name='owner_attempts', default=1)
+    owner = models.ForeignKey(CustomUser, on_delete=CASCADE, related_name='owner_attempts', default=1)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SUCCESSFULLY')
     server_response = models.TextField(blank=True, null=True)
     mailing = models.ForeignKey(Mailing, on_delete=CASCADE, verbose_name='Рассылка', related_name='attempt_set',
