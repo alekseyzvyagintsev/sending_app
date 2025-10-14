@@ -1,9 +1,10 @@
 ######################################################################################
 from django.urls import path, reverse_lazy
-from django.contrib.auth.views import LogoutView, PasswordChangeView, PasswordChangeDoneView
+from django.contrib.auth.views import LogoutView, PasswordChangeView
 from users.apps import UsersConfig
 
-from users.views import (RegisterView, ProfileDetailView, ProfileUpdateView, ProfileDeleteView, CustomLoginView, )
+from users.views import (RegisterView, ProfileDetailView, ProfileUpdateView, ProfileDeleteView, CustomLoginView,
+                         activate_account, )
 
 app_name = UsersConfig.name
 
@@ -16,6 +17,7 @@ urlpatterns = [
     path("profile/delete/<int:pk>/", ProfileDeleteView.as_view(), name="profile_delete"),
     path('pwd_chg/', PasswordChangeView.as_view(success_url=reverse_lazy('users:login')),
          name='password_change'),
+    path('activate/<int:pk>/<str:token>/', activate_account, name='activate'),
 ]
 
 ######################################################################################

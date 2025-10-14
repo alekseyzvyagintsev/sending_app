@@ -1,17 +1,18 @@
 #################################################################################################
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.core.files.storage import FileSystemStorage
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, Http404
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import DetailView, UpdateView, DeleteView
 from django.views.generic.edit import CreateView, FormMixin
-from django.core.mail import send_mail
-from django.contrib.auth import login
 
-from sending_app import settings
 from users.forms import CustomUserCreationForm, ProfileEditForm
 from users.models import CustomUser
+from users.utils import send_confirmation_email, send_activation_email
 
 
 class AvatarHandlingMixin(FormMixin):
@@ -59,19 +60,34 @@ class RegisterView(CreateView):
     success_url = reverse_lazy('users:login')
 
     def form_valid(self, form):
-        user = form.save(commit=False)                  # Создаем объект пользователя, но пока не сохраняем
-        password = form.cleaned_data.get("password1")   # Берём введённый пароль
-        user.set_password(password)                     # Устанавливаем пароль с использованием set_password
-        user.save()                                     # Сохраняем пользователя
-        login(self.request, user)                       # Авторизуем пользователя
-        self.send_welcome_email(user.email)
+        user = form.save(commit=False)  # Создаем объект пользователя, но пока не сохраняем
+        password = form.cleaned_data.get("password1")  # Берём введённый пароль
+        user.set_password(password)  # Устанавливаем пароль с использованием set_password
+        user.is_active = False  # Деактивируем пользователя до проверки почты
+        user.save()  # Сохраняем пользователя
+        send_confirmation_email(self, user) # Отправляем пользователю инструкцию для активации профиля
         return super().form_valid(form)
 
-    def send_welcome_email(self, user_email):
-        subject = 'Добро пожаловать в наш сервис'
-        message = 'Спасибо, что зарегистрировались в нашем сервисе!'
-        recipients_list = [user_email]
-        send_mail(subject, message, settings.EMAIL_HOST_USER, recipients_list)
+
+def activate_account(request, pk, token):
+    try:
+        user = CustomUser.objects.get(pk=pk)
+
+        # Проверяем токен и срок его действия
+        if user.activation_token == token and user.token_expires_at > timezone.now():
+            user.is_active = True
+            user.activation_token = ''  # Очищаем токен после активации
+            user.token_expires_at = None
+            user.save()
+            messages.success(request, 'Аккаунт успешно активирован!')
+            # Отправка приветственного письма
+            send_activation_email(user)
+            return redirect('users:profile', pk=pk)
+        else:
+            messages.error(request, 'Срок действия токена истек или неверный.')
+            return redirect('users:activate')
+    except CustomUser.DoesNotExist:
+        raise Http404("Пользователь не найден.")
 
 
 class ProfileDetailView(LoginRequiredMixin, DetailView):
@@ -106,6 +122,5 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         # Определение URL после успешной операции
         return reverse_lazy("users:profile", kwargs={"pk": self.object.pk})
-
 
 #################################################################################################
