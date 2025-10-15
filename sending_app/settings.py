@@ -86,6 +86,8 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+PASSWORD_RESET_TIMEOUT_DAYS = 1  # Количество дней, в течение которых действителен токен
+
 LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'Europe/Moscow'
@@ -127,6 +129,21 @@ CACHES = {
 
 APSCHEDULER_DATETIME_FORMAT = "d-m-Y H:i:s"
 SCHEDULER_DEFAULT = True
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
 
 
 ############################################################################################
