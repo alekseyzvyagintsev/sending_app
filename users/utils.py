@@ -1,5 +1,6 @@
 ##############################################################################################################
 import datetime
+import logging
 import uuid
 
 from django.core.mail import send_mail
@@ -7,6 +8,8 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from sending_app import settings
+
+logger = logging.getLogger(__name__)
 
 
 def generate_random_token():
@@ -22,6 +25,7 @@ def create_and_save_token(user):
     user.activation_token = token
     user.token_expires_at = expiration_time
     user.save(update_fields=['activation_token', 'token_expires_at'])
+    logger.info('Случайный токен создан и сохранен.')
     return token
 
 def send_confirmation_email(self, user):
@@ -38,7 +42,9 @@ def send_confirmation_email(self, user):
         {activation_link}\n\nСпасибо!'''
         # Отправляем письмо
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email,], fail_silently=False)
+        logger.info('Письмо с инструкциями отправлено')
     except Exception as e:
+        logger.error(e)
         print(e)
 
 def send_activation_email(user):
@@ -52,5 +58,7 @@ def send_activation_email(user):
         [user.email],
         fail_silently=False
     )
+    logger.info('Приветственное письмо отправлено')
+
 
 ##############################################################################################################

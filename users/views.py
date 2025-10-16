@@ -1,4 +1,5 @@
 #################################################################################################
+import logging
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
@@ -14,6 +15,7 @@ from users.forms import CustomUserCreationForm, ProfileEditForm
 from users.models import CustomUser
 from users.utils import send_confirmation_email, send_activation_email
 
+logger = logging.getLogger(__name__)
 
 class AvatarHandlingMixin(FormMixin):
     def form_valid(self, form):
@@ -38,7 +40,7 @@ class AvatarHandlingMixin(FormMixin):
         else:
             # Если изображение не передано, устанавливаем базовую картинку
             form.instance.avatar = "avatars/base_avatar.jpeg"
-
+        logger.info('Обработка изображения прошла успешно.')
         # Возвращаем стандартный процесс сохранения
         return super().form_valid(form)
 
@@ -50,6 +52,8 @@ class CustomLoginView(LoginView):
     def get_success_url(self):
         # Получаем id пользователя после успешной авторизации
         user_id = self.request.user.id
+        logger.info(f"{self.get_success_url.__qualname__}: Успешно")
+
         # Формируем URL с id пользователя
         return reverse_lazy('users:profile', kwargs={'pk': user_id})
 
@@ -66,6 +70,7 @@ class RegisterView(CreateView):
         user.is_active = False  # Деактивируем пользователя до проверки почты
         user.save()  # Сохраняем пользователя
         send_confirmation_email(self, user) # Отправляем пользователю инструкцию для активации профиля
+        logger.info(f"{self.form_valid.__qualname__}: Успешно")
         return super().form_valid(form)
 
 
@@ -80,13 +85,15 @@ def activate_account(request, pk, token):
             user.token_expires_at = None
             user.save()
             messages.success(request, 'Аккаунт успешно активирован!')
+            logger.info(request, 'Аккаунт успешно активирован!')
             # Отправка приветственного письма
             send_activation_email(user)
             return redirect('users:profile', pk=pk)
         else:
-            messages.error(request, 'Срок действия токена истек или неверный.')
+            logger.error(request, 'Срок действия токена истек или неверный.')
             return redirect('users:activate')
     except CustomUser.DoesNotExist:
+        logger.error('Пользователь не найден.')
         raise Http404("Пользователь не найден.")
 
 
@@ -113,7 +120,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         obj = self.get_object()
 
         # Если пользователь не является владельцем, запрещаем смену пароля
-        if not obj.owner == self.request.user:
+        if not obj == self.request.user:
             return HttpResponseForbidden("Вы не имеете прав на смену пароля этого пользователя.")
 
         # Если проверка прошла успешно, выполняем стандартную смену пароля
