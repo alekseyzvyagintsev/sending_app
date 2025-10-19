@@ -1,0 +1,10 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}home{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h3 class="mb-5">Всего {{ good_attempts_count }} успешн(ая/ые/ых) попыток(ка/ки/ок) рассыл(ка/ки/ок)</h3>
+        <h3 class="mb-5">Всего {{ bad_attempts_count }} неуспешн(ая/ые/ых) попыток(ка/ки/ок) рассыл(ка/ки/ок)</h3>
+        <h3 class="mb-5">Всего {{ total_unique_sent_messages }} отправленн(ое/ых) сообшен(ие/ий)</h3>
+    </div>
+{% endblock %}

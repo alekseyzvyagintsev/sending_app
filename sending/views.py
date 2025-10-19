@@ -567,4 +567,43 @@ class SendMailingView(LoginRequiredMixin, FormView):
 
             return self.form_invalid(form)
 
+
+class StatisticsView(LoginRequiredMixin, TemplateView):
+    paginate_by = 20
+    template_name = 'sending/statistics.html'
+    context_object_name = 'statistics'
+
+    def get_context_data(self, **kwargs):
+        """Добавляем дополнительные данные в контекст шаблона"""
+        context = super().get_context_data(**kwargs)
+
+        if self.request.user.is_superuser or (
+                self.request.user.has_perm('sending.view_mailing') and
+                self.request.user.has_perm('sending.view_mailing_attempts')
+        ):
+            mailings = Mailing.objects.all()  # Все рассылки
+            attempts = MailingAttempt.objects.all()  # Все сообщения
+        else:
+            mailings = Mailing.objects.filter(owner=self.request.user)  # Рассылки авторизованного пользователя
+            attempts = MailingAttempt.objects.filter(owner=self.request.user)  # Сообщения авторизованного пользователя
+
+        # Количество всех уникальных успешных отправок
+        if mailings.exists():
+            total_unique_sent_messages = attempts.filter(status='SUCCESSFULLY').values('mailing_id').distinct().count()
+        else:
+            total_unique_sent_messages = 0
+
+        if attempts.exists():
+            good_attempts_count = attempts.filter(status='SUCCESSFULLY').count()
+            bad_attempts_count = attempts.filter(status='UNSUCCESSFULLY').count()
+        else:
+            good_attempts_count = 0
+            bad_attempts_count = 0
+
+        context['good_attempts_count'] = good_attempts_count
+        context['bad_attempts_count'] = bad_attempts_count
+        context['total_unique_sent_messages'] = total_unique_sent_messages
+        logger.info(f"{self.get_context_data.__qualname__}: Успешно")
+        return context
+
 ################################################################################################

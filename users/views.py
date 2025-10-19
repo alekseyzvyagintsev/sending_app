@@ -3,12 +3,13 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
+from django.core.exceptions import PermissionDenied
 from django.core.files.storage import FileSystemStorage
-from django.http import HttpResponseForbidden, Http404
+from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import DetailView, UpdateView, DeleteView
+from django.views.generic import DetailView, UpdateView, DeleteView, TemplateView
 from django.views.generic.edit import CreateView, FormMixin
 
 from users.forms import CustomUserCreationForm, ProfileEditForm
@@ -76,7 +77,7 @@ class RegisterView(CreateView):
 
 def activate_account(request, pk, token):
     try:
-        user = CustomUser.objects.get(pk=pk)
+        user = CustomUser.objects.get(pk=request.user.pk)
 
         # Проверяем токен и срок его действия
         if user.activation_token == token and user.token_expires_at > timezone.now():
@@ -94,13 +95,19 @@ def activate_account(request, pk, token):
             return redirect('users:activate')
     except CustomUser.DoesNotExist:
         logger.error('Пользователь не найден.')
-        raise Http404("Пользователь не найден.")
+        raise Http404('Пользователь не найден.')
 
 
 class ProfileDetailView(LoginRequiredMixin, DetailView):
     model = CustomUser
     template_name = 'users/profile.html'
     context_object_name = "user"
+
+    def get_queryset(self):
+        """
+        Фильтруем объекты так, чтобы были видны только собственные записи.
+        """
+        return CustomUser.objects.filter(pk=self.request.user.pk)
 
 
 class ProfileDeleteView(LoginRequiredMixin, DeleteView):
@@ -109,25 +116,23 @@ class ProfileDeleteView(LoginRequiredMixin, DeleteView):
     context_object_name = "user"
     success_url = reverse_lazy('users:login')
 
+    def get_queryset(self):
+        """
+        Фильтруем объекты так, чтобы были видны только собственные записи.
+        """
+        return CustomUser.objects.filter(pk=self.request.user.pk)
+
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = CustomUser
     form_class = ProfileEditForm
-    template_name = "users/register.html"
+    template_name = 'users/register.html'
 
-    def dispatch(self, request, *args, **kwargs):
-        # Получаем объект модели
-        obj = self.get_object()
+    def get_queryset(self):
+        """
+        Фильтруем объекты так, чтобы были видны только собственные записи.
+        """
+        return CustomUser.objects.filter(pk=self.request.user.pk)
 
-        # Если пользователь не является владельцем, запрещаем смену пароля
-        if not obj == self.request.user:
-            return HttpResponseForbidden("Вы не имеете прав на смену пароля этого пользователя.")
-
-        # Если проверка прошла успешно, выполняем стандартную смену пароля
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        # Определение URL после успешной операции
-        return reverse_lazy("users:profile", kwargs={"pk": self.object.pk})
 
 #################################################################################################
