@@ -2,7 +2,7 @@
 {% block title %}Детали сообщения{% endblock %}
 
 {% block content %}
-    <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+    <div class="pricing-header px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
         {% if user.is_superuser or perms.sending.can_view_message or message.owner %}
             {% if message.is_active%}
                 <h3 class="card-text" style="color: green;">Сообщение активно</h3>
@@ -10,15 +10,15 @@
             {% if not message.is_active or message.is_active is None %}
                 <h3 class="card-text" style="color: red;">Сообщение заблокировано</h3>
             {% endif %}
-            <h1 class="display-4 px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">Сообщение {{ message.subject }},
+            <h1 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Сообщение {{ message.subject }},
                 владелц: {{ message.owner }}</h1>
-            <div class="container mt-5">
+            <div class="container mt-1">
                 <div class="card w-100">
-                    <p class="mt-3">{{ message.body_text }}</p>
+                    <p class="mt-1">{{ message.body_text }}</p>
                 </div>
             </div>
-            <div class="container mt-5">
-                <div class="mt-4 d-flex justify-content-between align-items-center">
+            <div class="container mt-1">
+                <div class="mt-1 d-flex justify-content-between align-items-center">
                     <a href="{% url 'sending:message_create' %}" class="btn btn-sm btn-outline-primary mt-2 mb-1">Создать
                         новое сообщение</a>
                     <a href="{% url 'sending:message_update' message.id %}"
@@ -38,23 +38,9 @@
                        class="btn btn-sm btn-outline-danger mt-2 mb-1">Удалить сообщение</a>
                     <a href="#" class="btn btn-sm btn-outline-secondary mt-2 mb-1">Статистика рассылок</a>
                 </div>
-                <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
-                    <h1 class="display-4">Всего {{ recipient_count }} получател(ь/я/ей) в рассылке.</h1>
-                </div>
-                <div class="container mt-5 mb-5">
-                    <div class="card w-100">
-                        {% for recipient in recipients %}
-                            <ul class="list-group list-group-flush">
-                                <a class="card-link" href="#">
-                                    <li class="list-group-item">{{ recipient }}</li>
-                                </a>
-                            </ul>
-                        {% endfor %}
-                    </div>
-                </div>
             </div>
         {% else %}
-            <h1 class="display-4 px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">У Вас нет права просмотра данной
+            <h1 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">У Вас нет права просмотра данной
                 рассылки</h1>
         {% endif %}
     </div>

@@ -1,4 +1,5 @@
 ############################################################################################
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -22,7 +23,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_apscheduler',
     'users',
     'sending',
 ]
@@ -86,6 +86,8 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+PASSWORD_RESET_TIMEOUT_DAYS = 1  # Количество дней, в течение которых действителен токен
+
 LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'Europe/Moscow'
@@ -127,6 +129,49 @@ CACHES = {
 
 APSCHEDULER_DATETIME_FORMAT = "d-m-Y H:i:s"
 SCHEDULER_DEFAULT = True
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'sending_app.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+        },
+        'sending': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+        'users': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
 
 
 ############################################################################################

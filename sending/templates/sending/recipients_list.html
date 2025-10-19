@@ -4,9 +4,9 @@
 {% block content %}
 <div class="pricing-header px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
     {% if user.is_superuser or perms.sending.can_view_recipient %}
-        <h1 class="display-4 px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Полный список получателей</h1>
+        <h1 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Полный список получателей</h1>
     {% else %}
-        <h1 class="display-4 px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Список Ваших получателей</h1>
+        <h1 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Список Ваших получателей</h1>
     {% endif %}
 </div>
 <div class="container mt-2 mb-2">

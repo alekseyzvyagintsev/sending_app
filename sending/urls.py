@@ -2,30 +2,18 @@
 from django.urls import path
 
 from sending.apps import SendingConfig
-from sending.views import (ContactView,
-                           MailingListView,
-                           MailingCreateView,
-                           MailingDetailView,
-                           MailingUpdateView,
-                           MailingBlockingView,
-                           MailingDeleteView,
-                           MessageListView,
-                           MessageCreateView,
-                           MessageDetailView,
-                           MessageUpdateView,
-                           MessageDeleteView,
-                           MessageBlockingView,
-                           RecipientListView,
-                           RecipientCreateView,
-                           RecipientDetailView,
-                           RecipientUpdateView,
-                           RecipientDeleteView,
-                           RecipientBlockingView, MailingAttemptsView, MailingAttemptView, SendMailingView)
+from sending.views import (HomeView, ContactView, MailingListView, MailingCreateView, MailingDetailView,
+                           MailingUpdateView, MailingBlockingView, MailingDeleteView, MessageListView,
+                           MessageCreateView, MessageDetailView, MessageUpdateView, MessageDeleteView,
+                           MessageBlockingView, RecipientListView, RecipientCreateView, RecipientDetailView,
+                           RecipientUpdateView, RecipientDeleteView, RecipientBlockingView, MailingAttemptsView,
+                           MailingAttemptView, SendMailingView, StatisticsView)
 
 app_name = SendingConfig.name
 
 
 urlpatterns = [
+    path('', HomeView.as_view(), name='home'),
     path("contact/", ContactView.as_view(), name="contact"),
     path('messages/', MessageListView.as_view(), name='messages_list'),
     path('message/create/', MessageCreateView.as_view(), name='message_create'),
@@ -33,7 +21,7 @@ urlpatterns = [
     path("message/update/<int:pk>/", MessageUpdateView.as_view(), name="message_update"),
     path("message/delete/<int:pk>/", MessageDeleteView.as_view(), name="message_delete"),
     path("message/blocking/<int:pk>/", MessageBlockingView.as_view(), name="message_blocking"),
-    path('', MailingListView.as_view(), name='mailing_list'),
+    path('mailing/list/', MailingListView.as_view(), name='mailing_list'),
     path('mailing/create/', MailingCreateView.as_view(), name='mailing_create'),
     path('mailing/detail/<int:pk>/', MailingDetailView.as_view(), name='mailing_detail'),
     path("mailing/update/<int:pk>/", MailingUpdateView.as_view(), name="mailing_update"),
@@ -48,7 +36,7 @@ urlpatterns = [
     path("attempts/<int:pk>/", MailingAttemptsView.as_view(), name="mailing_attempts"),
     path("attempt/<int:pk>/", MailingAttemptView.as_view(), name="attempt_detail"),
     path("send_mailing/<int:pk>/", SendMailingView.as_view(), name="send_mailing"),
-#     path("statistics/", StatisticsView.as_view(), name="statistics"),
+    path("statistics/", StatisticsView.as_view(), name="statistics"),
 ]
 
 ######################################################################################

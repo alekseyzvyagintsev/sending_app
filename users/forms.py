@@ -40,10 +40,10 @@ class CustomUserCreationForm(StileFormMixin, UserCreationForm):
         if not avatar_field:
             return None
         # Проверяем файлы на соответствие допустимым расширениям
-        valid_extensions = ["jpeg", "png"]
+        valid_extensions = ["jpg", "jpeg", "png"]
         validate_extensions(valid_extensions, avatar_field)
         # Проверяем, что размер файла не превышает допустимый размер
-        max_size_mb = 5
+        max_size_mb = 5 * 1024 * 1024
         validate_max_size_mb(max_size_mb, avatar_field)
 
         return avatar_field

@@ -32,7 +32,7 @@ class Message(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f'Тема - "{self.subject}",\nСодержание: {self.body_text}'
+        return f'Тема: {self.subject}. Содержание: {self.body_text}'
 
     class Meta:
         verbose_name = 'Сообщение'
@@ -65,10 +65,10 @@ class Mailing(models.Model):
         stop_localized = timezone.localtime(self.stop_sending) if self.stop_sending else None
 
         return(f"""
-        Рассылка {self.is_active}:\n
-        Статус: {self.status},\n
-        Начало рассылки: {start_localized},\n
-        Окончание рассылки: {stop_localized}
+        Рассылка № {self.id}:\n
+        Старт: {start_localized.strftime('%d.%m.%Y %H:%M')},\n
+        Окончание: {stop_localized.strftime('%d.%m.%Y %H:%M')},\n
+        Статус: {self.get_status_display()}\n
         """)
 
     class Meta:
@@ -92,14 +92,18 @@ class MailingAttempt(models.Model):
     end_at = models.DateTimeField(blank=True, null=True)
     recipient = models.ForeignKey(MessageRecipient, on_delete=models.CASCADE, related_name='recipient_attempts',
                                   blank=True, null=True)
-    owner = models.ForeignKey(MessageRecipient, on_delete=CASCADE, related_name='owner_attempts', default=1)
+    owner = models.ForeignKey(CustomUser, on_delete=CASCADE, related_name='owner_attempts', default=1)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SUCCESSFULLY')
     server_response = models.TextField(blank=True, null=True)
     mailing = models.ForeignKey(Mailing, on_delete=CASCADE, verbose_name='Рассылка', related_name='attempt_set',
                                 blank=True, null=True)
 
     def __str__(self):
-        return(f'Email получателя - {self.recipient.email}, статус отправки {self.status}. Попытка принадлежит рассылке № {self.mailing.id}.')
+        return(f'''
+        Email получателя - {self.recipient.email},\n
+        статус отправки {self.get_status_display()}.\n
+        Попытка принадлежит рассылке № {self.mailing.id}.
+        ''')
 
     class Meta:
         unique_together = ['mailing', 'recipient']

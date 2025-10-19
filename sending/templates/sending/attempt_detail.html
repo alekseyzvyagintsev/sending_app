@@ -11,7 +11,7 @@
                     <li class="list-group-item">Завершилась: {{ attempt.end_at }}</li>
                     <li class="list-group-item">Владелец: {{ attempt.owner }}</li>
                     <li class="list-group-item">Получатель: {{ attempt.recipient }}</li>
-                    <li class="list-group-item">Статус отправления: {{ attempt.status }}</li>
+                    <li class="list-group-item">Статус отправления: {{ attempt.get_status_display }}</li>
                     <li class="list-group-item">Ответ сервера: {{ attempt.server_response }}</li>
                 </a>
             </ul>
