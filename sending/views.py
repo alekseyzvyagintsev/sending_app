@@ -4,9 +4,12 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import HttpResponseForbidden
+from django.core.cache import cache
+from django.http import HttpResponseForbidden, Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, FormView, TemplateView
 
@@ -18,6 +21,7 @@ from sending.operator import perform_send
 logger = logging.getLogger(__name__)
 
 
+@method_decorator(cache_page(60*15), name='dispatch')
 class HomeView(LoginRequiredMixin, TemplateView):
     paginate_by = 20
     template_name = 'sending/home.html'
@@ -49,6 +53,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
         return context
 
 
+@method_decorator(cache_page(60*15), name='dispatch')
 class ContactView(View):
     def get(self, request):
         logger.info(f"{self.get.__qualname__}: Успешно")
@@ -73,13 +78,19 @@ class MessageListView(LoginRequiredMixin, ListView):
     # permission_required = 'sending.view_message'
 
     def get_queryset(self):
-        if self.request.user.is_superuser or self.request.user.has_perm('sending.view_message'):
-            queryset = super().get_queryset()  # Показываем ВСЕ сообщения, если у пользователя есть соответствующее право
-        else:
-            queryset = super().get_queryset().filter(
-                owner=self.request.user)  # Иначе показываем только собственные сообщения
+        key = f'message-list-{self.request.user.pk}'
+        queryset = cache.get(key)
+        if not queryset:
+            if self.request.user.is_superuser or self.request.user.has_perm('sending.view_message'):
+                queryset = super().get_queryset()  # Показываем ВСЕ сообщения, если у пользователя есть соответствующее право
+                sorted_queryset = queryset.order_by('owner')
+                cache.set(key, sorted_queryset, timeout=60 * 15)
+            else:
+                queryset = super().get_queryset().filter(
+                    owner=self.request.user)  # Иначе показываем только собственные сообщения
+                cache.set(key, queryset, timeout=60 * 15)
         logger.info(f"{self.get_queryset.__qualname__}: Успешно")
-        return queryset.order_by("owner")
+        return queryset
 
     def get_context_data(self, **kwargs):
         """Добавляем дополнительные данные в контекст шаблона"""
@@ -109,38 +120,20 @@ class MessageCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 
     def form_valid(self, form):
         """
-        Метод вызывается, когда форма прошла валидацию.
         Здесь мы добавляем текущего пользователя в качестве владельца сообщения.
         """
-        # Получаем объект сообщения из формы
-        obj = form.save(commit=False)
-
-        # Устанавливаем текущего пользователя в качестве владельца
-        obj.owner = self.request.user
-
-        # Сохраняем объект сообщения в базе данных
-        obj.save()
-
+        obj = form.save(commit=False)    # Получаем объект сообщения из формы
+        obj.owner = self.request.user    # Устанавливаем текущего пользователя в качестве владельца
+        obj.save()    # Сохраняем объект сообщения в базе данных
         logger.info(f"{self.form_valid.__qualname__}: Успешно")
-
-        # Возвращаем стандартный ответ родительского класса
-        return super().form_valid(form)
+        return super().form_valid(form)    # Возвращаем стандартный ответ родительского класса
 
 
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class MessageDetailView(LoginRequiredMixin, DetailView):
     model = Message
     template_name = 'sending/message_detail.html'
     context_object_name = 'message'
-
-    # def get_request(self):
-    #     request = super().get_queryset()
-
-    # request = cache.get('cached_request')
-    # if not request:
-    #     request = super().get_queryset()
-    #     cache.set('cached_request', request, 60 * 15)
-    #     logger.info(f"{self.get_request.__qualname__}: Успешно")
-    # return request
 
 
 class MessageUpdateView(LoginRequiredMixin, UpdateView):
@@ -184,8 +177,8 @@ class MessageDeleteView(LoginRequiredMixin, DeleteView):
         # Если пользователь не является ни владельцем, ни менеджером, запрещаем удаление
         if not (self.request.user.is_superuser or is_manager or obj.owner == self.request.user):
             return HttpResponseForbidden('Вы не имеете прав на удаление этого сообщения.')
-        logger.info(f"{self.dispatch.__qualname__}: Успешно")
 
+        logger.info(f"{self.dispatch.__qualname__}: Успешно")
         # Если проверка прошла успешно, выполняем стандартное удаление
         return super().dispatch(request, *args, **kwargs)
 
@@ -200,14 +193,20 @@ class MailingListView(LoginRequiredMixin, ListView):
     # permission_required = 'sending.view_mailing'
 
     def get_queryset(self):
-        if self.request.user.is_superuser or self.request.user.has_perm('sending.view_mailing'):
-            queryset = super().get_queryset()  # Показываем ВСЕ рассылки, если у пользователя есть соответствующее право
-        else:
-            queryset = super().get_queryset().filter(
-                owner=self.request.user)  # Иначе показываем только собственные рассылки
+        key = f'mailing-list-{self.request.user.id}'
+        queryset = cache.get(key)
+        if not queryset:
+            if self.request.user.is_superuser or self.request.user.has_perm('sending.view_mailing'):
+                queryset = super().get_queryset()  # Показываем ВСЕ рассылки, если у пользователя есть соответствующее право
+                sorted_queryset = queryset.order_by('owner')
+                cache.set(key, sorted_queryset, timeout=60 * 15)
+            else:
+                queryset = super().get_queryset().filter(
+                    owner=self.request.user)  # Иначе показываем только собственные рассылки
+                cache.set(key, queryset, timeout=60 * 15)
         logger.info(f"{self.get_queryset.__qualname__}: Успешно")
 
-        return queryset.order_by('owner')
+        return queryset
 
     def get_context_data(self, **kwargs):
         """Добавляем дополнительные данные в контекст шаблона"""
@@ -270,6 +269,7 @@ class MailingCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return context
 
 
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class MailingDetailView(LoginRequiredMixin, DetailView):
     model = Mailing
     template_name = 'sending/mailing_detail.html'
@@ -325,17 +325,13 @@ class MailingDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('sending:mailing_list')
 
     def dispatch(self, request, *args, **kwargs):
-        # Получаем объект модели
-        obj = self.get_object()
-
+        obj = self.get_object()    # Получаем объект модели
         # Проверяем, принадлежит ли пользователь группе менеджеров
         is_manager = Group.objects.filter(name='Менеджер', user=self.request.user).exists()
-
         # Если пользователь не является ни владельцем, ни менеджером, запрещаем удаление
         if not (self.request.user.is_superuser or is_manager or obj.owner == self.request.user):
             return HttpResponseForbidden('Вы не имеете прав на удаление этой рассылки.')
         logger.info(f"{self.dispatch.__qualname__}: Успешно")
-
         # Если проверка прошла успешно, выполняем стандартное удаление
         return super().dispatch(request, *args, **kwargs)
 
@@ -350,14 +346,20 @@ class RecipientListView(LoginRequiredMixin, ListView):
     # permission_required = 'sending.view_recipient'
 
     def get_queryset(self):
-        if self.request.user.is_superuser or self.request.user.has_perm('sending.view_recipients'):
-            queryset = super().get_queryset()  # Показываем ВСЕХ получателей, если у пользователя есть соответствующее право
-        else:
-            queryset = super().get_queryset().filter(
-                owner=self.request.user)  # Иначе показываем только собственных получателей
+        key = f'recipient-list-{self.request.user.id}'
+        queryset = cache.get(key)
+        if not queryset:
+            if self.request.user.is_superuser or self.request.user.has_perm('sending.view_recipients'):
+                queryset = super().get_queryset()  # Показываем ВСЕХ получателей, если у пользователя есть соответствующее право
+                sorted_queryset = queryset.order_by('owner')
+                cache.set(key, sorted_queryset, timeout=60 * 15)
+            else:
+                queryset = super().get_queryset().filter(
+                    owner=self.request.user)  # Иначе показываем только собственных получателей
+                cache.set(key, queryset, timeout=60 * 15)
         logger.info(f"{self.get_queryset.__qualname__}: Успешно")
 
-        return queryset.order_by('owner')
+        return queryset
 
     def get_context_data(self, **kwargs):
         """Добавляем дополнительные данные в контекст шаблона"""
@@ -367,10 +369,8 @@ class RecipientListView(LoginRequiredMixin, ListView):
         else:
             recipients = MessageRecipient.objects.filter(owner=self.request.user)
         context['recipients'] = recipients
-        # Передаем количество сообщений
-        context['recipients_count'] = len(recipients)
+        context['recipients_count'] = len(recipients)    # Передаем количество сообщений
         logger.info(f"{self.get_context_data.__qualname__}: Успешно")
-
         return context
 
 
@@ -385,16 +385,12 @@ class RecipientCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 
     def form_valid(self, form):
         """
-        Метод вызывается, когда форма прошла валидацию.
         Здесь мы добавляем текущего пользователя в качестве владельца получателя.
         """
-        # Получаем объект получателя из формы
-        obj = form.save(commit=False)
-        # Устанавливаем текущего пользователя в качестве владельца
-        obj.owner = self.request.user
-        # Сохраняем объект получателя в базе данных
+        obj = form.save(commit=False)    # Получаем объект получателя из формы
+        obj.owner = self.request.user    # Устанавливаем текущего пользователя в качестве владельца
         try:
-            obj.save()
+            obj.save()    # Сохраняем объект получателя в базе данных
         except Exception as e:
             messages.error(self.request, f"Произошла ошибка при создании получателя: {e}")
             logger.info(f"{self.form_valid.__qualname__}. Ошибка: {str(e)}")
@@ -402,14 +398,23 @@ class RecipientCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
             return redirect('sending:create_recipient')
         logger.info(f"{self.form_valid.__qualname__}: Успешно")
 
-        # Возвращаем стандартный ответ родительского класса
-        return super().form_valid(form)
+        return super().form_valid(form)    # Возвращаем стандартный ответ родительского класса
 
 
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class RecipientDetailView(LoginRequiredMixin, DetailView):
     model = MessageRecipient
     template_name = 'sending/recipient_detail.html'
     context_object_name = 'recipient'
+
+    def get_request(self):
+        request = cache.get('cached_request')
+        if not request:
+            request = super().get_queryset()
+            cache.set('cached_request', request, 60 * 15)
+            logger.info(f"{self.get_request.__qualname__}: Успешно добавлено в кэш на 15мин.")
+        logger.info(f"{self.get_request.__qualname__}: Успешно получено из кэша.")
+        return request
 
 
 class RecipientUpdateView(LoginRequiredMixin, UpdateView):
@@ -420,26 +425,19 @@ class RecipientUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         """
-        Метод вызывается, когда форма прошла валидацию.
         Здесь мы добавляем текущего пользователя в качестве владельца получателя.
         """
-        # Получаем объект получателя из формы
-        obj = form.save(commit=False)
+        obj = form.save(commit=False)    # Получаем объект получателя из формы
         if obj.owner is None:
-            # Устанавливаем текущего пользователя в качестве владельца
-            obj.owner = self.request.user
-        # Сохраняем объект получателя в базе данных
+            obj.owner = self.request.user    # Устанавливаем текущего пользователя в качестве владельца
         try:
-            obj.save()
+            obj.save()    # Сохраняем объект получателя в базе данных
         except Exception as e:
             messages.error(self.request, f'Произошла ошибка при создании получателя: {e}')
             logger.info(f"{self.form_valid.__qualname__}. Ошибка: {str(e)}")
-
             return redirect('sending:create_recipient')
         logger.info(f"{self.form_valid.__qualname__}. Успешно")
-
-        # Возвращаем стандартный ответ родительского класса
-        return super().form_valid(form)
+        return super().form_valid(form)    # Возвращаем стандартный ответ родительского класса
 
 
 class RecipientBlockingView(LoginRequiredMixin, UpdateView):
@@ -485,8 +483,9 @@ class RecipientDeleteView(LoginRequiredMixin, DeleteView):
         return super().dispatch(request, *args, **kwargs)
 
 
-# # CRUD для попыток рассылок
-class MailingAttemptsView(LoginRequiredMixin, ListView):
+# CRUD для попыток рассылок
+@method_decorator(cache_page(60 * 15), name='dispatch')
+class MailingAttemptsListView(LoginRequiredMixin, ListView):
     model = MailingAttempt
     paginate_by = 20
     template_name = 'sending/mailing_attempts.html'
@@ -527,24 +526,23 @@ class MailingAttemptsView(LoginRequiredMixin, ListView):
         return context
 
 
-class MailingAttemptView(LoginRequiredMixin, DetailView):
+@method_decorator(cache_page(60 * 15), name='dispatch')
+class MailingAttemptDetailView(LoginRequiredMixin, DetailView):
     model = MailingAttempt
     template_name = 'sending/attempt_detail.html'
     context_object_name = 'attempt'
 
     def get_queryset(self):
+        global queryset
         user = self.request.user
         attempt_id = self.kwargs.get('pk', None)
-        if user.is_superuser or user.has_perm('sending.view_attempt'):
-            queryset = super().get_queryset()
+        if attempt_id is not None:
+            if user.is_superuser or user.has_perm('sending.view_attempt'):
             # Показываем ВСЕ попытки рассылок, если у пользователя есть соответствующее право
-            if attempt_id is not None:
                 queryset = super().get_queryset().filter(pk=attempt_id)
-        else:
-            queryset = super().get_queryset().filter(owner=user)
-            # Иначе показываем только собственные попытки рассылок
-            if attempt_id is not None:
-                queryset = super().get_queryset().filter(pk=attempt_id)
+            else:
+                # Иначе показываем только собственные попытки рассылок
+                queryset = super().get_queryset().filter(owner=user, pk=attempt_id)
         logger.info(f"{self.get_queryset.__qualname__}. Успешно")
 
         return queryset
@@ -568,6 +566,7 @@ class SendMailingView(LoginRequiredMixin, FormView):
             return self.form_invalid(form)
 
 
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class StatisticsView(LoginRequiredMixin, TemplateView):
     paginate_by = 20
     template_name = 'sending/statistics.html'

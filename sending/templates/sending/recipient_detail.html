@@ -36,7 +36,8 @@
                     {% endif %}
                     <a href="{% url 'sending:recipient_delete' recipient.id %}"
                        class="btn btn-sm btn-outline-danger mt-1 mb-1">Удалить получателя</a>
-                    <a href="#" class="btn btn-sm btn-outline-secondary mt-1 mb-1">Статистика рассылок</a>
+                    <a href="{% url 'sending:statistics' %}"
+                       class="btn btn-sm btn-outline-secondary mt-1 mb-1">Статистика рассылок</a>
                 </div>
             </div>
         {% else %}

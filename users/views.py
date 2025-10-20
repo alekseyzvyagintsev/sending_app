@@ -48,15 +48,13 @@ class AvatarHandlingMixin(FormMixin):
 
 class CustomLoginView(LoginView):
     model = CustomUser
-    template_name = 'users/login.html'  # Укажите ваш шаблон
+    template_name = 'users/login.html'
 
     def get_success_url(self):
-        # Получаем id пользователя после успешной авторизации
-        user_id = self.request.user.id
+        user_id = self.request.user.id   # Получаем id пользователя после успешной авторизации
         logger.info(f"{self.get_success_url.__qualname__}: Успешно")
 
-        # Формируем URL с id пользователя
-        return reverse_lazy('users:profile', kwargs={'pk': user_id})
+        return reverse_lazy('users:profile', kwargs={'pk': user_id})   # Формируем URL с id пользователя
 
 
 class RegisterView(CreateView):
@@ -78,7 +76,6 @@ class RegisterView(CreateView):
 def activate_account(request, pk, token):
     try:
         user = CustomUser.objects.get(pk=request.user.pk)
-
         # Проверяем токен и срок его действия
         if user.activation_token == token and user.token_expires_at > timezone.now():
             user.is_active = True
@@ -86,12 +83,11 @@ def activate_account(request, pk, token):
             user.token_expires_at = None
             user.save()
             messages.success(request, 'Аккаунт успешно активирован!')
-            logger.info(request, 'Аккаунт успешно активирован!')
-            # Отправка приветственного письма
-            send_activation_email(user)
+            logger.info(user.email, 'Аккаунт успешно активирован!')
+            send_activation_email(user)   # Отправка приветственного письма
             return redirect('users:profile', pk=pk)
         else:
-            logger.error(request, 'Срок действия токена истек или неверный.')
+            logger.error(user.email, 'Срок действия токена истек или неверный.')
             return redirect('users:activate')
     except CustomUser.DoesNotExist:
         logger.error('Пользователь не найден.')

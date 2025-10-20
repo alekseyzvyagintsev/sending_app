@@ -36,7 +36,8 @@
                     {% endif %}
                     <a href="{% url 'sending:message_delete' message.id %}"
                        class="btn btn-sm btn-outline-danger mt-2 mb-1">Удалить сообщение</a>
-                    <a href="#" class="btn btn-sm btn-outline-secondary mt-2 mb-1">Статистика рассылок</a>
+                    <a href="{% url 'sending:statistics' %}"
+                       class="btn btn-sm btn-outline-secondary mt-2 mb-1">Статистика рассылок</a>
                 </div>
             </div>
         {% else %}
