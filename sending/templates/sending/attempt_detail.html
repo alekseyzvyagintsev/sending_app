@@ -2,7 +2,7 @@
 {% block title %}Детали попытки рассылки{% endblock %}
 
 {% block content %}
-    <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+    <div class="px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
         {% if user.is_superuser or perms.sending.can_view_mailing_attempt or mailing_detail.owner == attempt.owner %}
             <ul class="list-group list-group-flush">
                 <a>

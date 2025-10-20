@@ -2,7 +2,7 @@
 {% block title %}Детали получателя{% endblock %}
 
 {% block content %}
-    <div class="pricing-header px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+    <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
         {% if user.is_superuser or perms.sending.can_view_recipient or recipient.owner %}
             {% if recipient.is_active%}
                 <h3 class="card-text" style="color: green;">Получатель активен</h3>

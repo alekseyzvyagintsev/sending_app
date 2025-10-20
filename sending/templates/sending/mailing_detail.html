@@ -2,7 +2,7 @@
 {% block title %}Детали рассылки{% endblock %}
 
 {% block content %}
-    <div class="pricing-header px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+    <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
         {% if user.is_superuser or perms.sending.can_view_mailing or mailing.owner %}
             <h3 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Рассылка № {{ mailing.id }},
                 владелц: {{ mailing.owner }}, Статус рассылки: {{ mailing.get_status_display }}</h3>
