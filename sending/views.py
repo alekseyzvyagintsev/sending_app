@@ -552,7 +552,7 @@ class MailingAttemptDetailView(LoginRequiredMixin, PermissionRequiredMixin, Deta
 class SendMailingView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
     form_class = SendMailingForm
     template_name = 'sending/send_mailing.html'
-    permission_required = 'change_mailing'
+    permission_required = 'sending.change_mailing'
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -584,7 +584,7 @@ class StatisticsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
             attempts = MailingAttempt.objects.all()  # Все сообщения
         else:
             mailings = Mailing.objects.filter(owner=self.request.user)  # Рассылки авторизованного пользователя
-            attempts = MailingAttempt.objects.filter(owner=self.request.user)  # Сообщения авторизованного пользователя
+            attempts = MailingAttempt.objects.filter(mailing__in=mailings)  # Сообщения авторизованного пользователя
 
         # Количество всех уникальных успешных отправок
         if mailings.exists():

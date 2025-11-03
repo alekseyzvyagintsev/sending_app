@@ -7,11 +7,10 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import FileSystemStorage
-from django.http import Http404
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import DetailView, UpdateView, DeleteView
+from django.views.generic import DetailView, UpdateView, DeleteView, ListView
 from django.views.generic.edit import CreateView, FormMixin
 
 from users.forms import CustomUserCreationForm, ProfileEditForm
@@ -60,7 +59,7 @@ class CustomLoginView(LoginView):
         return reverse_lazy("users:profile", kwargs={"pk": user_id})  # Формируем URL с id пользователя
 
 
-class RegisterView(CreateView):
+class RegisterView(CreateView, AvatarHandlingMixin):
     template_name = "users/register.html"
     form_class = CustomUserCreationForm
     success_url = reverse_lazy("users:login")
@@ -70,8 +69,6 @@ class RegisterView(CreateView):
         password = form.cleaned_data.get("password1")  # Берём введённый пароль
         user.set_password(password)  # Устанавливаем пароль с использованием set_password
         user.is_active = False  # Деактивируем пользователя до проверки почты
-        users_group = Group.objects.create(name="Пользователь")
-        user.groups.add(users_group)  # Добавляем пользователя в группу 'Пользователь'
         user.save()  # Сохраняем пользователя
         send_confirmation_email(self, user)  # Отправляем пользователю инструкцию для активации профиля
         logger.info(f"{self.form_valid.__qualname__}: Успешно")
@@ -79,24 +76,27 @@ class RegisterView(CreateView):
 
 
 def activate_account(request, pk, token):
+    user = get_object_or_404(CustomUser, pk=pk)
+
     try:
-        user = CustomUser.objects.get(pk=request.user.pk)
-        # Проверяем токен и срок его действия
-        if user.activation_token == token and user.token_expires_at > timezone.now():
-            user.is_active = True
-            user.activation_token = ""  # Очищаем токен после активации
-            user.token_expires_at = None
-            user.save()
-            messages.success(request, "Аккаунт успешно активирован!")
-            logger.info(user.email, "Аккаунт успешно активирован!")
-            send_activation_email(user)  # Отправка приветственного письма
-            return redirect("users:profile", pk=pk)
-        else:
-            logger.error(user.email, "Срок действия токена истек или неверный.")
-            return redirect("users:activate")
-    except CustomUser.DoesNotExist:
-        logger.error("Пользователь не найден.")
-        raise Http404("Пользователь не найден.")
+        user_group = Group.objects.get(name="Пользователь")
+    except Group.DoesNotExist:
+        user_group = Group.objects.create(name="Пользователь")
+        logger.error("Группа 'Пользователь' не найдена. Создали группу для добавления в нее пользователя")
+    # Проверяем токен и срок его действия
+    if user.activation_token == token and user.token_expires_at > timezone.now():
+        user.is_active = True
+        user.activation_token = ""  # Очищаем токен после активации
+        user.token_expires_at = None
+        user.groups.add(user_group)  # Добавляем Пользователя в группу 'Пользователь'
+        user.save()
+        messages.success(request, "Аккаунт успешно активирован!")
+        logger.info(user.email, "Аккаунт успешно активирован!")
+        send_activation_email(user)  # Отправка приветственного письма
+        return redirect("users:profile", pk=pk)
+    else:
+        logger.error(user.email, "Срок действия токена истек или неверный.")
+        return redirect("users:activate")
 
 
 class ProfileDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
@@ -141,5 +141,42 @@ class ProfileUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView)
         """
         return CustomUser.objects.filter(pk=self.request.user.pk)
 
+
+class UsersListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    model = CustomUser
+    template_name = "users/users.html"
+    permission_required = "users.can_view_user"
+
+    def get_context_data(self, **kwargs):
+        """Добавляем дополнительные данные в контекст шаблона"""
+        context = super().get_context_data(**kwargs)
+        is_manager = Group.objects.filter(name="Менеджер", user=self.request.user).exists()
+
+        if self.request.user.is_superuser or is_manager:
+            users = CustomUser.objects.all()  # Все пользователи
+        else:
+            raise PermissionDenied("Нет разрешения на просмотр профиля")
+
+        if users:
+            all_users_count = len(users)
+            active_users = users.filter(is_active=True)
+            active_users_count = len(active_users)
+            blocked_users = users.filter(is_active=False)
+            blocked_users_count = len(blocked_users)
+        else:
+            all_users_count = 0
+            active_users = 0
+            active_users_count = 0
+            blocked_users = 0
+            blocked_users_count = 0
+
+        context["all_users_count"] = all_users_count
+        context["active_users"] = active_users
+        context["active_users_count"] = active_users_count
+        context["blocked_users"] = blocked_users
+        context["blocked_users_count"] = blocked_users_count
+        context["is_manager"] = is_manager
+        logger.info(f"{self.get_context_data.__qualname__}: Успешно")
+        return context
 
 #################################################################################################
