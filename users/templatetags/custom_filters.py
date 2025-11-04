@@ -17,4 +17,5 @@ def in_group(user, group_name):
     except Group.DoesNotExist:
         return False
 
+
 #########################################################################

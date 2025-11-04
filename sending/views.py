@@ -84,7 +84,7 @@ class MessageListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         if not queryset:
             is_manager = Group.objects.filter(name='Менеджер', user=self.request.user).exists()
             if self.request.user.is_superuser or is_manager:
-                queryset = super().get_queryset()  # Показываем ВСЕ сообщения, если у пользователя есть соответствующее право
+                queryset = super().get_queryset()  # Показываем ВСЕ сообщения, если у пользователя есть право
                 sorted_queryset = queryset.order_by('owner')
                 cache.set(key, sorted_queryset, timeout=60)
             else:
@@ -203,7 +203,7 @@ class MailingListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         if not queryset:
             is_manager = Group.objects.filter(name='Менеджер', user=self.request.user).exists()
             if self.request.user.is_superuser or is_manager:
-                queryset = super().get_queryset()  # Показываем ВСЕ рассылки, если у пользователя есть соответствующее право
+                queryset = super().get_queryset()  # Показываем ВСЕ рассылки, если у пользователя есть право
                 sorted_queryset = queryset.order_by('owner')
                 cache.set(key, sorted_queryset, timeout=60)
             else:
@@ -348,7 +348,7 @@ class RecipientListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         if not queryset:
             is_manager = Group.objects.filter(name='Менеджер', user=self.request.user).exists()
             if self.request.user.is_superuser or is_manager:
-                queryset = super().get_queryset()  # Показываем ВСЕХ получателей, если у пользователя есть соответствующее право
+                queryset = super().get_queryset()  # Показываем ВСЕХ получателей, если у пользователя есть право
                 sorted_queryset = queryset.order_by('owner')
                 cache.set(key, sorted_queryset, timeout=60)
             else:

@@ -64,4 +64,5 @@ def send_activation_email(user):
     send_mail(subject, message, settings.EMAIL_HOST_USER, [user.email], fail_silently=False)
     logger.info("Приветственное письмо отправлено")
 
+
 ##############################################################################################################

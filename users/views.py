@@ -179,4 +179,5 @@ class UsersListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         logger.info(f"{self.get_context_data.__qualname__}: Успешно")
         return context
 
+
 #################################################################################################

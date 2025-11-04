@@ -74,10 +74,12 @@ class Mailing(models.Model):
         stop_localized = timezone.localtime(self.stop_sending) if self.stop_sending else None
 
         return (f"""
-        Рассылка № {self.id}:\n
-        Старт: {start_localized.strftime('%d.%m.%Y %H:%M') if isinstance(start_localized, datetime.datetime) else '-'},\n
-        Окончание: {stop_localized.strftime('%d.%m.%Y %H:%M') if isinstance(stop_localized, datetime.datetime) else '-'},\n
-        Статус: {self.get_status_display()}\n
+        Рассылка № {self.id}:
+        Старт:
+            {start_localized.strftime('%d.%m.%Y %H:%M') if isinstance(start_localized, datetime.datetime) else '-'},
+        Окончание:
+            {stop_localized.strftime('%d.%m.%Y %H:%M') if isinstance(stop_localized, datetime.datetime) else '-'},
+        Статус: {self.get_status_display()}
         """)
 
     class Meta:
