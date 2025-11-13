@@ -150,14 +150,17 @@ LOGGING = {
         "django": {
             "handlers": ["console", "file"],
             "level": "INFO",
+            "propagate": True,
         },
         "sending": {
             "handlers": ["console", "file"],
             "level": "DEBUG",
+            "propagate": False,
         },
         "users": {
             "handlers": ["console", "file"],
             "level": "DEBUG",
+            "propagate": False,
         },
     },
     "root": {

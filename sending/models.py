@@ -12,7 +12,7 @@ class MessageRecipient(models.Model):
     email = models.EmailField(unique=True)
     fullname = models.CharField(max_length=50)
     comment = models.TextField()
-    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name='Владелец рассылки', blank=True,
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name='Владелец получателя', blank=True,
                               null=True)
     is_active = models.BooleanField(default=True)
 
@@ -35,7 +35,7 @@ class MessageRecipient(models.Model):
 class Message(models.Model):
     subject = models.CharField(max_length=50, verbose_name='Тема сообщения')
     body_text = models.TextField(blank=True, null=True)
-    owner = models.ForeignKey(CustomUser, on_delete=CASCADE, verbose_name='Владелец рассылки', blank=True, null=True)
+    owner = models.ForeignKey(CustomUser, on_delete=CASCADE, verbose_name='Владелец сообщения', blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -105,7 +105,8 @@ class MailingAttempt(models.Model):
     end_at = models.DateTimeField(blank=True, null=True)
     recipient = models.ForeignKey(MessageRecipient, on_delete=models.CASCADE, related_name='recipient_attempts',
                                   blank=True, null=True)
-    owner = models.ForeignKey(CustomUser, on_delete=CASCADE, related_name='owner_attempts', default=1)
+    owner = models.ForeignKey(CustomUser, on_delete=CASCADE, related_name='owner_attempts', default=1,
+                              verbose_name='Владелец попытки')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SUCCESSFULLY')
     server_response = models.TextField(blank=True, null=True)
     mailing = models.ForeignKey(Mailing, on_delete=CASCADE, verbose_name='Рассылка', related_name='attempt_set',

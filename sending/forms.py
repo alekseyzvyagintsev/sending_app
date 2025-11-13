@@ -39,7 +39,7 @@ class BlockMailingForm(forms.ModelForm):
 class MessageRecipientForm(forms.ModelForm):
     class Meta:
         model = MessageRecipient
-        fields = ['email', 'fullname', 'comment', 'is_active']
+        fields = ['email', 'fullname', 'comment', 'is_active', 'owner']
         widgets = {'is_active': forms.CheckboxInput(), }
 
 

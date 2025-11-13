@@ -11,8 +11,6 @@ from email_validator import validate_email, EmailNotValidError
 from sending.models import Mailing, MailingAttempt
 from sending_app import settings
 
-# from django_apscheduler.jobstores import DjangoJobStore
-
 logger = logging.getLogger(__name__)
 
 
