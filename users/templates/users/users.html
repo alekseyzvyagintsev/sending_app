@@ -1,0 +1,43 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Пользователи{% endblock %}
+
+{% block content %}
+    <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+        {% if user.is_superuser or is_manager %}
+            <h2 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Список пользователей</h2>
+        {% else %}
+            <h2 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">У Вас нет права просмота списка пользователей</h2>
+        {% endif %}
+    </div>
+    <div class="container mt-1">
+        <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+            <h4>Всего {{ all_users_count }} пользовател(ь/я/ей).</h4>
+        </div>
+        <div class="container mt-1 mb-1">
+            <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto">
+                <h5>Всего {{ active_users_count }} активных пользовател(ь/я/ей).</h5>
+            </div>
+            <div class="card w-100">
+                {% for active_user in active_users %}
+                    <ul class="list-group list-group-flush">
+                        <a class="card-link" href="{% url 'users:profile' active_user.id %}">
+                            <li class="list-group-item">{{ active_user }}</li>
+                        </a>
+                    </ul>
+                {% endfor %}
+            </div>
+            <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto">
+                <h5>Всего {{ blocked_users_count }} заблокированн(ый/ых) пользовател(ь/я/ей).</h5>
+            </div>
+            <div class="card w-100">
+                {% for blocked_user in blocked_users %}
+                    <ul class="list-group list-group-flush">
+                        <a class="card-link" href="{% url 'users:profile' blocked_user.id %}">
+                            <li class="list-group-item">{{ blocked_user }}</li>
+                        </a>
+                    </ul>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

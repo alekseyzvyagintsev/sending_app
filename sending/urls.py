@@ -6,8 +6,8 @@ from sending.views import (HomeView, ContactView, MailingListView, MailingCreate
                            MailingUpdateView, MailingBlockingView, MailingDeleteView, MessageListView,
                            MessageCreateView, MessageDetailView, MessageUpdateView, MessageDeleteView,
                            MessageBlockingView, RecipientListView, RecipientCreateView, RecipientDetailView,
-                           RecipientUpdateView, RecipientDeleteView, RecipientBlockingView, MailingAttemptsView,
-                           MailingAttemptView, SendMailingView, StatisticsView)
+                           RecipientUpdateView, RecipientDeleteView, RecipientBlockingView, MailingAttemptsListView,
+                           MailingAttemptDetailView, SendMailingView, StatisticsView)
 
 app_name = SendingConfig.name
 
@@ -33,8 +33,8 @@ urlpatterns = [
     path("recipient/update/<int:pk>/", RecipientUpdateView.as_view(), name="recipient_update"),
     path("recipient/delete/<int:pk>/", RecipientDeleteView.as_view(), name="recipient_delete"),
     path("recipient/blocking/<int:pk>/", RecipientBlockingView.as_view(), name="recipient_blocking"),
-    path("attempts/<int:pk>/", MailingAttemptsView.as_view(), name="mailing_attempts"),
-    path("attempt/<int:pk>/", MailingAttemptView.as_view(), name="attempt_detail"),
+    path("attempts/<int:pk>/", MailingAttemptsListView.as_view(), name="mailing_attempts"),
+    path("attempt/<int:pk>/", MailingAttemptDetailView.as_view(), name="attempt_detail"),
     path("send_mailing/<int:pk>/", SendMailingView.as_view(), name="send_mailing"),
     path("statistics/", StatisticsView.as_view(), name="statistics"),
 ]

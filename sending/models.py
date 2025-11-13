@@ -1,8 +1,9 @@
 ###############################################################################################################
-from django.utils import timezone
+import datetime
 
 from django.db import models
 from django.db.models import CASCADE
+from django.utils import timezone
 
 from users.models import CustomUser
 
@@ -11,7 +12,7 @@ class MessageRecipient(models.Model):
     email = models.EmailField(unique=True)
     fullname = models.CharField(max_length=50)
     comment = models.TextField()
-    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name='Владелец рассылки', blank=True,
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name='Владелец получателя', blank=True,
                               null=True)
     is_active = models.BooleanField(default=True)
 
@@ -22,13 +23,19 @@ class MessageRecipient(models.Model):
         verbose_name = 'Получатель'
         verbose_name_plural = 'Получатели'
         db_table = "recipient"
-        permissions = [('deactivate_recipient', 'Деактивация получателя'), ]
+        permissions = [
+            ('can_deactivate_recipient', 'can_deactivate_recipient'),
+            ('can_add_recipient', 'can_add_recipient'),
+            ('can_view_recipient', 'can_view_recipient'),
+            ('can_change_recipient', 'can_change_recipient'),
+            ('can_delete_recipient', 'can_delete_recipient'),
+        ]
 
 
 class Message(models.Model):
     subject = models.CharField(max_length=50, verbose_name='Тема сообщения')
     body_text = models.TextField(blank=True, null=True)
-    owner = models.ForeignKey(CustomUser, on_delete=CASCADE, verbose_name='Владелец рассылки', blank=True, null=True)
+    owner = models.ForeignKey(CustomUser, on_delete=CASCADE, verbose_name='Владелец сообщения', blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -38,7 +45,9 @@ class Message(models.Model):
         verbose_name = 'Сообщение'
         verbose_name_plural = 'Сообщения'
         db_table = "message"
-        permissions = [('block_message', 'Блокировка сообщения'), ]
+        permissions = [
+            ('can_block_message', 'can_block_message'),
+        ]
 
 
 class Mailing(models.Model):
@@ -64,11 +73,13 @@ class Mailing(models.Model):
         start_localized = timezone.localtime(self.start_sending) if self.start_sending else None
         stop_localized = timezone.localtime(self.stop_sending) if self.stop_sending else None
 
-        return(f"""
-        Рассылка № {self.id}:\n
-        Старт: {start_localized.strftime('%d.%m.%Y %H:%M')},\n
-        Окончание: {stop_localized.strftime('%d.%m.%Y %H:%M')},\n
-        Статус: {self.get_status_display()}\n
+        return (f"""
+        Рассылка № {self.id}:
+        Старт:
+            {start_localized.strftime('%d.%m.%Y %H:%M') if isinstance(start_localized, datetime.datetime) else '-'},
+        Окончание:
+            {stop_localized.strftime('%d.%m.%Y %H:%M') if isinstance(stop_localized, datetime.datetime) else '-'},
+        Статус: {self.get_status_display()}
         """)
 
     class Meta:
@@ -76,7 +87,9 @@ class Mailing(models.Model):
         verbose_name_plural = 'Рассылки'
         ordering = ["start_sending", "status", "is_active"]
         db_table = "mailing"
-        permissions = [('block_mailing', 'Блокировка рассылки'), ]
+        permissions = [
+            ('can_block_mailing', 'can_block_mailing'),
+        ]
 
 
 class MailingAttempt(models.Model):
@@ -92,14 +105,15 @@ class MailingAttempt(models.Model):
     end_at = models.DateTimeField(blank=True, null=True)
     recipient = models.ForeignKey(MessageRecipient, on_delete=models.CASCADE, related_name='recipient_attempts',
                                   blank=True, null=True)
-    owner = models.ForeignKey(CustomUser, on_delete=CASCADE, related_name='owner_attempts', default=1)
+    owner = models.ForeignKey(CustomUser, on_delete=CASCADE, related_name='owner_attempts', default=1,
+                              verbose_name='Владелец попытки')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SUCCESSFULLY')
     server_response = models.TextField(blank=True, null=True)
     mailing = models.ForeignKey(Mailing, on_delete=CASCADE, verbose_name='Рассылка', related_name='attempt_set',
                                 blank=True, null=True)
 
     def __str__(self):
-        return(f'''
+        return (f'''
         Email получателя - {self.recipient.email},\n
         статус отправки {self.get_status_display()}.\n
         Попытка принадлежит рассылке № {self.mailing.id}.
@@ -111,6 +125,12 @@ class MailingAttempt(models.Model):
         verbose_name_plural = 'Попытки рассылок'
         ordering = ["attempted_at", ]
         db_table = "mailing_attempt"
-        permissions = [('block_mailing_attempt', 'Блокировка попытки рассылки'), ]
+        permissions = [
+            ('can_block_mailing_attempt', 'can_block_mailing_attempt'),
+            ('can_add_mailing_attempt', 'can_add_mailing_attempt'),
+            ('can_view_mailing_attempt', 'can_view_mailing_attempt'),
+            ('can_change_mailing_attempt', 'can_change_mailing_attempt'),
+            ('can_delete_mailing_attempt', 'can_delete_mailing_attempt'),
+        ]
 
 ###############################################################################################################

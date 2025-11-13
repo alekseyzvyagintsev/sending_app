@@ -2,11 +2,11 @@
 {% block title %}Получатели{% endblock %}
 
 {% block content %}
-<div class="pricing-header px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+<div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
     {% if user.is_superuser or perms.sending.can_view_recipient %}
-        <h1 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Полный список получателей</h1>
+        <h3 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Полный список получателей</h3>
     {% else %}
-        <h1 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Список Ваших получателей</h1>
+        <h3 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Список Ваших получателей</h3>
     {% endif %}
 </div>
 <div class="container mt-2 mb-2">
@@ -14,8 +14,8 @@
         <a href="{% url 'sending:recipient_create' %}" class="btn btn-sm btn-outline-primary mt-1 mb-1">Создать нового
             получателя</a>
     </div>
-    <div class="pricing-header px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
-        <h4 class="display-4">Всего создано {{ recipients_count }} получател(ь/я/ей).</h4>
+    <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+        <h3>Всего создано {{ recipients_count }} получател(ь/я/ей).</h3>
     </div>
     <div class="container mt-2 mb-2">
         <div class="card w-100">

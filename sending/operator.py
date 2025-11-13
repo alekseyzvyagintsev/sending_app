@@ -6,15 +6,13 @@ import smtplib
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.utils import timezone
-# from django_apscheduler.jobstores import DjangoJobStore
-
 from email_validator import validate_email, EmailNotValidError
 
-
-from sending_app import settings
 from sending.models import Mailing, MailingAttempt
+from sending_app import settings
 
 logger = logging.getLogger(__name__)
+
 
 def perform_send(mailing_id):
     mailing = Mailing.objects.get(id=mailing_id)
@@ -47,7 +45,8 @@ def perform_send(mailing_id):
                 attempt.server_response = f"Invalid email address: {str(e)}"
                 attempt.status = 'UNSUCCESSFULLY'
                 attempt.save()
-                logger.debug(f"Status: {attempt.status}, Server response: {attempt.server_response}, End at: {attempt.end_at}")
+                logger.debug(
+                    f"Status: {attempt.status}, Server response: {attempt.server_response}, End at: {attempt.end_at}")
                 failed_count += 1
                 continue  # Переходим к следующему получателю
             try:
@@ -74,7 +73,8 @@ def perform_send(mailing_id):
             finally:
                 attempt.save()
                 attempts.append(attempt)
-                logger.debug(f"Status: {attempt.status}, Server response: {attempt.server_response}, End at: {attempt.end_at}")
+                logger.debug(
+                    f"Status: {attempt.status}, Server response: {attempt.server_response}, End at: {attempt.end_at}")
         except IntegrityError:
             failed_count += 1
 
@@ -83,6 +83,7 @@ def perform_send(mailing_id):
     logger.info(f"Рассылка завершена. Всего успешных отправок: {successful_count}, неудачных: {failed_count}")
     return successful_count, failed_count, attempts
 
+
 def sender(mailing_id=None):
     if mailing_id is None:
         raise ValueError("Требуется аргумент mailing_id")
@@ -90,6 +91,5 @@ def sender(mailing_id=None):
     result = perform_send(mailing_id)
     successful_count, failed_count, attempts = result
     return successful_count, failed_count, attempts
-
 
 ######################################################################################
