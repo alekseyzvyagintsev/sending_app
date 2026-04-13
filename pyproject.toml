@@ -1,9 +1,9 @@
 [project]
 name = "sending_app"
 version = "0.1.0"
-description = ""
+description = "Веб-приложение на Django для управления массовыми email-рассылками с поддержкой пользовательских аккаунтов, прав доступа и статистики отправок."
 authors = [
-    {name = "Aleksey Zvyagintsev", email = "alex0236889@gmail.com"}
+    { name = "Aleksey Zvyagintsev", email = "alex0236889@gmail.com" }
 ]
 readme = "README.md"
 requires-python = ">=3.12"
@@ -17,11 +17,11 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
-django = "^5.2.6"
+django = "==5.2.8"
 python-dotenv = "^1.1.1"
-psycopg2-binary = "^2.9.10"
-poetry-core = "^2.0.0"
-apscheduler = "^3.11.0"
+psycopg2-binary = "==2.9.11"
+redis = "^5.0.3"
+apscheduler = "==3.11.1"
 django-apscheduler = "^0.7.0"
 email-validator = "^2.3.0"
 

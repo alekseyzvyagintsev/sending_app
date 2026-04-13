@@ -7,15 +7,15 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import FileSystemStorage
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import DetailView, UpdateView, DeleteView, ListView
+from django.views.generic import DeleteView, DetailView, ListView, UpdateView
 from django.views.generic.edit import CreateView, FormMixin
 
 from users.forms import CustomUserCreationForm, ProfileEditForm
 from users.models import CustomUser
-from users.utils import send_confirmation_email, send_activation_email
+from users.utils import send_activation_email, send_confirmation_email
 
 logger = logging.getLogger(__name__)
 
@@ -91,12 +91,12 @@ def activate_account(request, pk, token):
         user.groups.add(user_group)  # Добавляем Пользователя в группу 'Пользователь'
         user.save()
         messages.success(request, "Аккаунт успешно активирован!")
-        logger.info(user.email, "Аккаунт успешно активирован!")
+        logger.info("%s: Аккаунт успешно активирован!", user.email)
         send_activation_email(user)  # Отправка приветственного письма
         return redirect("users:profile", pk=pk)
     else:
-        logger.error(user.email, "Срок действия токена истек или неверный.")
-        return redirect("users:activate")
+        logger.error("%s: Срок действия токена истек или неверный.", user.email)
+        return redirect("users:login")
 
 
 class ProfileDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
@@ -129,11 +129,14 @@ class ProfileDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView)
         return CustomUser.objects.filter(pk=self.request.user.pk)
 
 
-class ProfileUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+class ProfileUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView, AvatarHandlingMixin):
     model = CustomUser
     form_class = ProfileEditForm
     template_name = "users/register.html"
     permission_required = "users.can_change_user"
+
+    def get_success_url(self):
+        return reverse_lazy("users:profile", kwargs={"pk": self.object.pk})
 
     def get_queryset(self):
         """
@@ -147,36 +150,44 @@ class UsersListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     template_name = "users/users.html"
     permission_required = "users.can_view_user"
 
+    def get_queryset(self):
+        """Определяем queryset в зависимости от типа пользователя"""
+        # Проверяем суперпользователя
+        if self.request.user.is_superuser:
+            return CustomUser.objects.all()
+
+        # Проверяем менеджера
+        is_manager = Group.objects.filter(name="Менеджер", user=self.request.user).exists()
+        if is_manager:
+            return CustomUser.objects.all()
+
+        # Для обычных пользователей - пустой queryset
+        return CustomUser.objects.none()
+
     def get_context_data(self, **kwargs):
         """Добавляем дополнительные данные в контекст шаблона"""
         context = super().get_context_data(**kwargs)
-        is_manager = Group.objects.filter(name="Менеджер", user=self.request.user).exists()
+        users = self.get_queryset()
 
-        if self.request.user.is_superuser or is_manager:
-            users = CustomUser.objects.all()  # Все пользователи
-        else:
-            raise PermissionDenied("Нет разрешения на просмотр профиля")
+        all_users_count = len(users)
+        active_users = [user for user in users if user.is_active]
+        active_users_count = len(active_users)
+        blocked_users = [user for user in users if not user.is_active]
+        blocked_users_count = len(blocked_users)
 
-        if users:
-            all_users_count = len(users)
-            active_users = users.filter(is_active=True)
-            active_users_count = len(active_users)
-            blocked_users = users.filter(is_active=False)
-            blocked_users_count = len(blocked_users)
-        else:
-            all_users_count = 0
-            active_users = 0
-            active_users_count = 0
-            blocked_users = 0
-            blocked_users_count = 0
-
+        context["users"] = users
         context["all_users_count"] = all_users_count
         context["active_users"] = active_users
         context["active_users_count"] = active_users_count
         context["blocked_users"] = blocked_users
         context["blocked_users_count"] = blocked_users_count
-        context["is_manager"] = is_manager
-        logger.info(f"{self.get_context_data.__qualname__}: Успешно")
+        context["is_manager"] = Group.objects.filter(name="Менеджер", user=self.request.user).exists()
+        logger.info(
+            f"""
+            {self.get_context_data.__qualname__}: Успешно,
+            для {self.request.user.email} список из {users.count()} пользователей
+        """
+        )
         return context
 
 

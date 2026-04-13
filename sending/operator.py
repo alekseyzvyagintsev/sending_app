@@ -6,7 +6,7 @@ import smtplib
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.utils import timezone
-from email_validator import validate_email, EmailNotValidError
+from email_validator import EmailNotValidError, validate_email
 
 from sending.models import Mailing, MailingAttempt
 from sending_app import settings
@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 def perform_send(mailing_id):
     mailing = Mailing.objects.get(id=mailing_id)
     logger.debug(f"Объект рассылки по id: {mailing.id} - {mailing}")
-    mailing.status = 'STARTED'
+    mailing.status = "STARTED"
     mailing.save()
     logger.debug(f"Установили {mailing.status}")
     recipients = mailing.recipients.all()
     logger.debug(f"Получатели из рассылки {recipients}")
 
     if not recipients:
-        logger.debug('Список получателей пуст')
+        logger.debug("Список получателей пуст")
         return None
 
     attempts = []
@@ -43,10 +43,11 @@ def perform_send(mailing_id):
             except EmailNotValidError as e:
                 logger.error(f"Некорректный email адрес: {str(e)}")
                 attempt.server_response = f"Invalid email address: {str(e)}"
-                attempt.status = 'UNSUCCESSFULLY'
+                attempt.status = "UNSUCCESSFULLY"
                 attempt.save()
                 logger.debug(
-                    f"Status: {attempt.status}, Server response: {attempt.server_response}, End at: {attempt.end_at}")
+                    f"Status: {attempt.status}, Server response: {attempt.server_response}, End at: {attempt.end_at}"
+                )
                 failed_count += 1
                 continue  # Переходим к следующему получателю
             try:
@@ -55,30 +56,31 @@ def perform_send(mailing_id):
                     message=f"Здравствуйте {recipient.fullname}. {mailing.message.body_text}",
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[recipient.email],
-                    fail_silently=False
+                    fail_silently=False,
                 )
                 logger.debug(f"Отправлено письмо получателю {recipient}")
-                attempt.status = 'SUCCESSFULLY'
+                attempt.status = "SUCCESSFULLY"
                 successful_count += 1
             except smtplib.SMTPException as e:
                 logger.error(f"Ошибка отправки SMTP: {str(e)}")
                 attempt.server_response = str(e)
-                attempt.status = 'UNSUCCESSFULLY'
+                attempt.status = "UNSUCCESSFULLY"
                 failed_count += 1
             except Exception as e:
                 logger.error(f"Возникла ошибка во время отправки письма: {str(e)}")
                 attempt.server_response = str(e)
-                attempt.status = 'UNSUCCESSFULLY'
+                attempt.status = "UNSUCCESSFULLY"
                 failed_count += 1
             finally:
                 attempt.save()
                 attempts.append(attempt)
                 logger.debug(
-                    f"Status: {attempt.status}, Server response: {attempt.server_response}, End at: {attempt.end_at}")
+                    f"Status: {attempt.status}, Server response: {attempt.server_response}, End at: {attempt.end_at}"
+                )
         except IntegrityError:
             failed_count += 1
 
-    mailing.status = 'COMPLETED'
+    mailing.status = "COMPLETED"
     mailing.save()
     logger.info(f"Рассылка завершена. Всего успешных отправок: {successful_count}, неудачных: {failed_count}")
     return successful_count, failed_count, attempts
@@ -91,5 +93,6 @@ def sender(mailing_id=None):
     result = perform_send(mailing_id)
     successful_count, failed_count, attempts = result
     return successful_count, failed_count, attempts
+
 
 ######################################################################################

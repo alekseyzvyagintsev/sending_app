@@ -26,18 +26,18 @@ class Command(BaseCommand):
         if len(mailings) > 0:
             for mailing in mailings:
                 if (
-                        (mailing.start_sending is None and mailing.stop_sending is None)
-                        or (
+                    (mailing.start_sending is None and mailing.stop_sending is None)
+                    or (
                         mailing.start_sending is not None
                         and mailing.start_sending <= now
                         and mailing.stop_sending is None
-                )
-                        or (
+                    )
+                    or (
                         mailing.stop_sending is not None
                         and mailing.stop_sending >= now
                         and mailing.start_sending is None
-                )
-                        or (mailing.start_sending <= now and mailing.stop_sending >= now)
+                    )
+                    or (mailing.start_sending <= now and mailing.stop_sending >= now)
                 ):
 
                     perform_send(mailing.id)
@@ -51,5 +51,6 @@ class Command(BaseCommand):
             f"Успешно отправлено {matches}шт. "
             f"Не подходят для отправки {not_matches}шт."
         )
+
 
 #####################################################################################################

@@ -13,7 +13,7 @@ def validate_forbidden_words(forbidden_words, value):
     """
     # Приводим значение к нижнему регистру для упрощенной проверки
     lower_value = value.lower()
-    logger.info('Проводится проверка на запрещенные слова')
+    logger.info("Проводится проверка на запрещенные слова")
     # Проверяем каждый элемент массива запрещенных слов
     for word in forbidden_words:
         if word in lower_value:
