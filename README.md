@@ -85,7 +85,7 @@
 
 ### 1. Клонирование репозитория
 
-bash git clone https://github.com/alekseyzvyagintsev/habit_tracker.git cd habit_tracker
+bash git clone https://github.com/alekseyzvyagintsev/sending_app.git cd sending_app
 
 ### 2. Создание `.env` файла
 
