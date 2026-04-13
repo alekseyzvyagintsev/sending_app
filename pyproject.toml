@@ -22,7 +22,7 @@ python-dotenv = "^1.1.1"
 psycopg2-binary = "==2.9.11"
 redis = "^5.0.3"
 apscheduler = "==3.11.1"
-django-apscheduler = "^0.10.1"
+django-apscheduler = "^0.7.0"
 email-validator = "^2.3.0"
 
 [tool.poetry.group.lint.dependencies]
