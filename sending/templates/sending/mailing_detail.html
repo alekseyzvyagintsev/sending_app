@@ -1,0 +1,71 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Детали рассылки{% endblock %}
+
+{% block content %}
+    <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+        {% if user.is_superuser or perms.sending.can_view_mailing or mailing.owner %}
+            <h3 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Рассылка № {{ mailing.id }},
+                владелц: {{ mailing.owner }}, Статус рассылки: {{ mailing.get_status_display }}</h3>
+            {% if mailing.is_active is True %}
+                <h3 class="card-text" style="color: green;">Рассылка активна</h3>
+            {% endif %}
+            {% if mailing.is_active is False %}
+                <h3 class="card-text" style="color: red;">Рассылка заблокирована</h3>
+            {% endif %}
+            <div class="container mt-1 h5">
+                <div class="card w-100">
+                    <p class="mt-1">{{ mailing.message }}</p>
+                </div>
+            </div>
+            <div class="container mt-1">
+                <div class="mt-1 d-flex justify-content-between align-items-center">
+                    <a href="{% url 'sending:mailing_create' %}" class="btn btn-sm btn-outline-primary mt-1 mb-1">Создать
+                        новую рассылку</a>
+                    <a href="{% url 'sending:mailing_update' mailing.id %}"
+                       class="btn btn-sm btn-outline-primary mt-1 mb-1">Редактировать рассылку</a>
+                    {% if mailing.id %}
+                        <a href="{% url 'sending:mailing_blocking' mailing.id %}"
+                           class="btn btn-sm btn-outline-danger mt-1 mb-1">
+                            {% if mailing.is_active %}
+                                Заблокировать рассылку
+                            {% endif %}
+                            {% if not mailing.is_active or mailing.is_active is None %}
+                                Разблокировать рассылку
+                            {% endif %}
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'sending:mailing_delete' mailing.id %}"
+                       class="btn btn-sm btn-outline-danger mt-1 mb-1">Удалить рассылку</a>
+                    <!-- Форма отправки -->
+                    <form action="{% url 'sending:send_mailing' mailing.pk %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="mailing_id" value="{{ mailing.pk }}"/>
+                        <button type="submit" class="btn btn-sm btn-outline-primary mt-1 mb-1">Запустить рассылку
+                        </button>
+                    </form>
+                    <a href="{% url 'sending:mailing_attempts' mailing.id %}"
+                       class="btn btn-sm btn-outline-secondary mt-1 mb-1">История рассылки</a>
+                    <a href="{% url 'sending:statistics' %}"
+                       class="btn btn-sm btn-outline-secondary mt-1 mb-1">Статистика рассылок</a>
+                </div>
+                <div class="pricing-header px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+                    <h3>Всего {{ recipient_count }} получател(ь/я/ей) в рассылке.</h3>
+                </div>
+                <div class="container mt-1 mb-1 h5">
+                    <div class="card w-100">
+                        {% for recipient in recipients %}
+                            <ul class="list-group list-group-flush">
+                                <a class="card-link" href="#">
+                                    <li class="list-group-item">{{ recipient }}</li>
+                                </a>
+                            </ul>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <h1 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">У Вас нет права просмотра данной
+                рассылки</h1>
+        {% endif %}
+    </div>
+{% endblock %}

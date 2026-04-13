@@ -1,0 +1,34 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Получатели{% endblock %}
+
+{% block content %}
+<div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+    {% if user.is_superuser or perms.sending.can_view_recipient %}
+        <h3 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Полный список получателей</h3>
+    {% else %}
+        <h3 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Список Ваших получателей</h3>
+    {% endif %}
+</div>
+<div class="container mt-2 mb-2">
+    <div class="mt-1 d-flex justify-content-between align-items-center">
+        <a href="{% url 'sending:recipient_create' %}" class="btn btn-sm btn-outline-primary mt-1 mb-1">Создать нового
+            получателя</a>
+    </div>
+    <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+        <h3>Всего создано {{ recipients_count }} получател(ь/я/ей).</h3>
+    </div>
+    <div class="container mt-2 mb-2">
+        <div class="card w-100">
+            {% for recipient in recipients %}
+                <ul class="list-group list-group-flush">
+                    <a class="card-link" href="{% url 'sending:recipient_detail' recipient.id %}">
+                        <li class="list-group-item">{{ recipient }}</li>
+                    </a>
+                </ul>
+            {% empty %}
+                <p>Нет зарегистрированных получателей.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

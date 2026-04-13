@@ -1,0 +1,26 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Форма для получателя{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="mb-5">Форма для получателя{{ recipient.fullname }}</h1>
+        <form method="post" class="form-floating" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            {% if recipient.id %}
+                <a href="{% url 'sending:recipient_blocking' recipient.id %}"
+                   class="btn btn-lg btn-block btn-outline-danger mt-3 mb-1">
+                    {% if recipient.is_active %}
+                        Заблокировать получателя
+                    {% endif %}
+                    {% if not recipient.is_active or recipient.is_active is None %}
+                        Разблокировать получателя
+                    {% endif %}
+                </a>
+            {% endif %}
+            <button type="submit" class="btn btn-lg btn-block btn-outline-primary mt-3 mb-1">Сохранить</button>
+            <a href="{% url 'sending:recipients_list' %}" class="btn btn-lg btn-block btn-outline-secondary mt-3 mb-1">К
+                списку без сохранения</a>
+        </form>
+    </div>
+{% endblock %}

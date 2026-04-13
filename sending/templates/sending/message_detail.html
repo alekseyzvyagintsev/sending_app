@@ -1,0 +1,48 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Детали сообщения{% endblock %}
+
+{% block content %}
+    <div class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">
+        {% if user.is_superuser or perms.sending.can_view_message or message.owner %}
+            {% if message.is_active%}
+                <h3 class="card-text" style="color: green;">Сообщение активно</h3>
+            {% endif %}
+            {% if not message.is_active or message.is_active is None %}
+                <h3 class="card-text" style="color: red;">Сообщение заблокировано</h3>
+            {% endif %}
+            <h1 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">Сообщение {{ message.subject }},
+                владелец: {{ message.owner }}</h1>
+            <div class="container mt-1">
+                <div class="card w-100">
+                    <p class="mt-1">{{ message.body_text }}</p>
+                </div>
+            </div>
+            <div class="container mt-1">
+                <div class="mt-1 d-flex justify-content-between align-items-center">
+                    <a href="{% url 'sending:message_create' %}" class="btn btn-sm btn-outline-primary mt-2 mb-1">Создать
+                        новое сообщение</a>
+                    <a href="{% url 'sending:message_update' message.id %}"
+                       class="btn btn-sm btn-outline-primary mt-2 mb-1">Редактировать сообщение</a>
+                    {% if message.id %}
+                        <a href="{% url 'sending:message_blocking' message.id %}"
+                           class="btn btn-sm btn-outline-danger mt-2 mb-1">
+                            {% if message.is_active %}
+                                Заблокировать сообщение
+                            {% endif %}
+                            {% if not message.is_active or message.is_active is None %}
+                                Разблокировать сообщение
+                            {% endif %}
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'sending:message_delete' message.id %}"
+                       class="btn btn-sm btn-outline-danger mt-2 mb-1">Удалить сообщение</a>
+                    <a href="{% url 'sending:statistics' %}"
+                       class="btn btn-sm btn-outline-secondary mt-2 mb-1">Статистика рассылок</a>
+                </div>
+            </div>
+        {% else %}
+            <h1 class="px-1 py-1 pt-md-1 pb-md-1 mx-auto text-center">У Вас нет права просмотра данной
+                рассылки</h1>
+        {% endif %}
+    </div>
+{% endblock %}

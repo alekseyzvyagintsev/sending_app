@@ -1,0 +1,26 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Статус активности получателя{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="mb-5">Статус активности получателя: {{ recipient.fullname }}
+            {% if recipient.is_active %}
+                <h3 class="card-text" style="color: green;">Получатель активен</h3>
+            {% endif %}
+            {% if not recipient.is_active or recipient.is_active is None %}
+                <h3 class="card-text" style="color: red;">Получатель заблокирован</h3>
+            {% endif %}
+        </h1>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ object.pk }}"/>
+            <button type="submit" class="btn btn-lg btn-block btn-outline-danger mt-3 mb-1">
+                {% if object.is_active %}
+                    Заблокировать получателя
+                {% else %}
+                    Разблокировать получателя
+                {% endif %}
+            </button>
+        </form>
+    </div>
+{% endblock %}

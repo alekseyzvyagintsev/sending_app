@@ -1,7 +1,10 @@
 ######################################################################################
+import logging
 import os
 
 from django.core.exceptions import ValidationError
+
+logger = logging.getLogger(__name__)
 
 
 def validate_forbidden_words(forbidden_words, value):
@@ -10,7 +13,7 @@ def validate_forbidden_words(forbidden_words, value):
     """
     # Приводим значение к нижнему регистру для упрощенной проверки
     lower_value = value.lower()
-
+    logger.info("Проводится проверка на запрещенные слова")
     # Проверяем каждый элемент массива запрещенных слов
     for word in forbidden_words:
         if word in lower_value:
@@ -24,6 +27,7 @@ def validate_max_size_mb(max_size_mb=5, value=None):
     if value:
         file_size = value.size / (1024 * 1024)  # Размер файла в МБ
         if file_size > max_size_mb:
+            logger.error("Размер файла превышает {} MB.".format(max_size_mb))
             raise ValidationError("Размер файла превышает {} MB.".format(max_size_mb))
 
 
@@ -34,6 +38,7 @@ def validate_extensions(valid_extensions, value):
     if value:
         extension = os.path.splitext(value.name)[1].lstrip(".").lower()
         if extension not in valid_extensions:
+            logger.error(f"{extension}! Допускаются только файлы {valid_extensions}")
             raise ValidationError(f"{extension}! Допускаются только файлы {valid_extensions}")
 
 

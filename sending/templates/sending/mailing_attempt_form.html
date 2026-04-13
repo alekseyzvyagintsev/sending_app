@@ -1,0 +1,24 @@
+{% extends 'base_templates/base.html' %}
+{% block title %}Форма для создания попытки рассылки{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="mb-5">Форма для создания попытки рассылки {{ mailing_attempt.mailing }}</h1>
+        <form method="post" class="form-floating" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            {% if mailing_attempt.id %}
+                <a href="{% url 'sending:mailing_blocking' mailing_attempt.id %}"
+                   class="btn btn-lg btn-block btn-outline-danger mt-3 mb-1">
+                    {% if mailing_attempt.is_active %}
+                        Заблокировать рассылку
+                    {% endif %}
+                    {% if not mailing_attempt.is_active or mailing_attempt.is_active is None %}
+                        Разблокировать рассылку
+                    {% endif %}
+                </a>
+            {% endif %}
+            <button type="submit" class="btn btn-lg btn-block btn-outline-primary mt-3 mb-1">Сохранить</button>
+        </form>
+    </div>
+{% endblock %}

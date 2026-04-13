@@ -9,7 +9,7 @@
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" class="btn btn-lg btn-block btn-outline-danger">Удалить</button>
-            <a href="{% url 'catalog:home' %}" class="btn btn-lg btn-block btn-outline-secondary">Вернуться к списку</a>
+            <a href="{% url 'sending:home' %}" class="btn btn-lg btn-block btn-outline-secondary">Вернуться к списку</a>
         </form>
     </div>
 {% endblock %}
