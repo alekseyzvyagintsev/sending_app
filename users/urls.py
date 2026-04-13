@@ -5,13 +5,13 @@ from django.urls import path, reverse_lazy
 
 from users.apps import UsersConfig
 from users.views import (
-    RegisterView,
+    CustomLoginView,
+    ProfileDeleteView,
     ProfileDetailView,
     ProfileUpdateView,
-    ProfileDeleteView,
-    CustomLoginView,
-    activate_account,
+    RegisterView,
     UsersListView,
+    activate_account,
 )
 
 app_name = UsersConfig.name
